@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>🔥 Super Clicker</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:'Segoe UI',Arial,sans-serif;
+background:
+radial-gradient(circle at top,#2563eb,#020617 70%);
+color:white;
+text-align:center;
+min-height:100vh;
+}
+
+
+nav{
+display:flex;
+justify-content:space-around;
+background:rgba(15,23,42,.95);
+padding:12px;
+position:sticky;
+top:0;
+z-index:20;
+backdrop-filter:blur(10px);
+}
+
+
+nav button{
+background:#334155;
+border:0;
+color:white;
+padding:10px 15px;
+border-radius:12px;
+cursor:pointer;
+transition:.3s;
+}
+
+
+nav button:hover{
+background:#2563eb;
+transform:scale(1.1);
+}
+
+
+.screen{
+display:none;
+padding:20px;
+}
+
+
+.active{
+display:block;
+}
+
+
+.title{
+font-size:38px;
+text-shadow:
+0 0 20px #60a5fa;
+}
+
+
+.card{
+background:
+linear-gradient(
+145deg,
+#1e293b,
+#020617
+);
+
+padding:15px;
+margin:15px auto;
+border-radius:20px;
+max-width:500px;
+
+box-shadow:
+0 0 25px rgba(0,0,0,.5);
+}
+
+
+.stat{
+display:flex;
+justify-content:center;
+flex-wrap:wrap;
+}
+
+
+.stat div{
+background:#111827;
+margin:5px;
+padding:12px;
+border-radius:15px;
+min-width:120px;
+}
+
+
+.bigbtn{
+
+width:85%;
+max-width:350px;
+height:140px;
+
+font-size:42px;
+font-weight:bold;
+
+border:0;
+border-radius:35px;
+
+background:
+linear-gradient(
+45deg,
+#2563eb,
+#38bdf8
+);
+
+color:white;
+
+cursor:pointer;
+
+box-shadow:
+0 0 35px #2563eb;
+
+transition:.15s;
+}
+
+
+.bigbtn:active{
+transform:scale(.9);
+}.progress{
+
+height:18px;
+background:#020617;
+border-radius:20px;
+overflow:hidden;
+
+}
+
+
+.progress span{
+
+display:block;
+height:100%;
+
+background:#22c55e;
+
+width:0%;
+
+transition:.3s;
+
+}
+
+
+
+.shopItem{
+
+background:#111827;
+border-radius:18px;
+
+padding:15px;
+margin:10px;
+
+border:1px solid #334155;
+
+}
+
+
+
+.shopItem button{
+
+background:#22c55e;
+
+color:white;
+
+border:0;
+
+padding:10px 25px;
+
+border-radius:12px;
+
+cursor:pointer;
+
+}
+
+
+
+.shopItem button:hover{
+
+background:#16a34a;
+
+}
+
+
+
+
+#notify{
+
+position:fixed;
+
+top:80px;
+
+right:20px;
+
+background:#22c55e;
+
+padding:15px;
+
+border-radius:15px;
+
+display:none;
+
+z-index:100;
+
+animation:popup .4s;
+
+}
+
+
+
+@keyframes popup{
+
+from{
+
+transform:translateX(200px);
+
+opacity:0;
+
+}
+
+to{
+
+transform:translateX(0);
+
+opacity:1;
+
+}
+
+}
+
+
+.small{
+
+opacity:.7;
+font-size:13px;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div id="notify"></div>
+
+
+<!-- Звуки игры -->
+
+<audio id="bgMusic" src="Fonovaya.mp3" loop></audio>
+
+<audio id="clickSound" src="Click.wav"></audio>
+
+<audio id="buySound" src="BuySound.mp3"></audio>
+
+<audio id="errorSound" src="error.mp3"></audio>
+
+<audio id="notificationSound" src="notification.mp3"></audio>
+
+
+
+<nav>
+
+<button onclick="show('game')">
+⚔️ Игра
+</button>
+
+<button onclick="show('shop')">
+🛒 Магазин
+</button>
+
+<button onclick="show('ach')">
+🏆 Достижения
+</button>
+
+<button onclick="show('stats')">
+📊 Статы
+</button>
+
+</nav>
+
+
+
+<div id="game" class="screen active">
+
+
+<h1 class="title">
+🔥 Super Clicker
+</h1>
+
+
+
+<div class="card stat">
+
+
+<div>
+💰 Очки
+<br>
+<b id="score">
+0
+</b>
+</div>
+
+
+<div>
+⚔️ Сила
+<br>
+<b id="power">
+1
+</b>
+</div>
+
+
+<div>
+🤖 Авто
+<br>
+<b id="auto">
+0
+</b>
+</div>
+
+
+<div>
+⭐ Уровень
+<br>
+<b id="lvl">
+1
+</b>
+</div>
+
+
+</div>
+
+
+
+<button class="bigbtn" onclick="clicker(); playClick();">
+
+КЛИК
+
+</button>
+
+
+
+<div class="card">
+
+<h3>
+Опыт
+</h3>
+
+
+<div class="progress">
+
+<span id="xpbar"></span>
+
+</div>
+
+
+<p>
+
+<span id="xp">
+0
+</span>
+
+/
+
+<span id="nextXP">
+1000
+</span>
+
+XP
+
+</p>
+
+
+</div>
+
+
+</div><div id="shop" class="screen">
+
+<h2>
+🛒 Магазин улучшений
+</h2>
+
+<div class="card">
+
+<p class="small">
+Покупай предметы и становись сильнее!
+</p>
+
+</div>
+
+
+<div id="shopList"></div>
+
+
+</div>
+
+
+
+
+<div id="ach" class="screen">
+
+
+<h2>
+🏆 Достижения
+</h2>
+
+
+<div class="card">
+
+<div id="achlist">
+
+Нет открытых достижений
+
+</div>
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div id="stats" class="screen">
+
+
+<h2>
+📊 Статистика
+</h2>
+
+
+<div class="card">
+
+
+<p>
+🖱 Всего силы:
+<b id="total">
+0
+</b>
+</p>
+
+
+<p>
+🛒 Покупок:
+<b id="buyc">
+0
+</b>
+</p>
+
+
+<p>
+🏆 Достижений:
+<b id="achCount">
+0
+</b>
+</p>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<script>
+
+
+// =====================
+// ЗВУКИ
+// =====================
+
+
+const bgMusic = document.getElementById("bgMusic");
+const clickSound = document.getElementById("clickSound");
+const buySound = document.getElementById("buySound");
+const errorSound = document.getElementById("errorSound");
+const notificationSound = document.getElementById("notificationSound");
+
+
+bgMusic.volume = 0.08;
+clickSound.volume = 0.25;
+buySound.volume = 0.25;
+errorSound.volume = 0.2;
+notificationSound.volume = 0.3;
+
+
+
+document.addEventListener("click",()=>{
+
+if(bgMusic.paused){
+
+bgMusic.play();
+
+}
+
+},{once:true});
+
+
+
+
+
+function playClick(){
+
+clickSound.currentTime=0;
+
+clickSound.play();
+
+}
+
+
+
+
+
+let score=0;
+
+let power=1;
+
+let auto=0;
+
+let total=0;
+
+let lvl=1;
+
+
+let xp=0;
+
+let nextXP=1000;
+
+
+let buyCount=0;
+
+
+let achievements=[];
+
+
+
+// =====================
+// 50 УЛУЧШЕНИЙ
+// =====================
+
+
+let upgrades=[];
+
+
+for(let i=1;i<=50;i++){
+
+
+upgrades.push({
+
+
+name:"⚡ Улучшение "+i,
+
+
+cost:Math.floor(30*Math.pow(1.18,i)),
+
+
+power:i%2===0 ? i : 0,
+
+
+auto:i%2!==0 ? Math.ceil(i/2) : 0,
+
+
+bought:false
+
+
+});
+
+
+}
+
+
+
+
+
+// =====================
+// ДОСТИЖЕНИЯ
+// =====================
+
+
+let achData=[
+
+
+{
+id:"first",
+name:"👆 Первый клик",
+check:()=>total>=1
+},
+
+
+{
+id:"hundred",
+name:"🔥 100 кликов",
+check:()=>total>=100
+},
+
+
+{
+id:"thousand",
+name:"⚔️ 1000 кликов",
+check:()=>total>=1000
+},
+
+
+{
+id:"tenk",
+name:"💀 10000 кликов",
+check:()=>total>=10000
+},
+
+
+{
+id:"million",
+name:"🌟 Миллионер",
+check:()=>score>=1000000
+},
+
+
+{
+id:"buy1",
+name:"🛒 Первая покупка",
+check:()=>buyCount>=1
+},
+
+
+{
+id:"buy10",
+name:"🏪 Торговец",
+check:()=>buyCount>=10
+},
+
+
+{
+id:"buy50",
+name:"👑 Император магазина",
+check:()=>buyCount>=50
+},
+
+
+{
+id:"lvl5",
+name:"⭐ Уровень 5",
+check:()=>lvl>=5
+},
+
+
+{
+id:"lvl10",
+name:"🌟 Уровень 10",
+check:()=>lvl>=10
+},
+
+
+{
+id:"lvl50",
+name:"🚀 Уровень 50",
+check:()=>lvl>=50
+},
+
+
+{
+id:"lvl100",
+name:"🌌 Уровень 100",
+check:()=>lvl>=100
+},
+
+
+{
+id:"lvl500",
+name:"💫 Бессмертный",
+check:()=>lvl>=500
+},
+
+
+{
+id:"auto10",
+name:"🤖 Автоматизация",
+check:()=>auto>=10
+},
+
+
+{
+id:"auto100",
+name:"🤖 Армия роботов",
+check:()=>auto>=100
+},
+
+
+{
+id:"power100",
+name:"⚡ Сила 100",
+check:()=>power>=100
+},
+
+
+{
+id:"power1000",
+name:"🔥 Сила 1000",
+check:()=>power>=1000
+},
+
+
+{
+id:"collector",
+name:"🎒 Коллекционер",
+check:()=>upgrades.every(x=>x.bought)
+},
+
+
+{
+id:"legend",
+name:"🏆 Легенда",
+check:()=>total>=1000000
+},
+
+
+{
+id:"super",
+name:"🔥 Super Clicker",
+check:()=>lvl>=1000
+}
+
+];// =====================
+// КЛИК
+// =====================
+
+function clicker(){
+
+score += power;
+
+total += power;
+
+addXP(power);
+
+checkAchievements();
+
+update();
+
+save();
+
+}
+
+
+
+
+
+// =====================
+// XP И УРОВНИ
+// =====================
+
+function addXP(amount){
+
+xp += amount;
+
+
+while(xp >= nextXP){
+
+
+xp -= nextXP;
+
+
+lvl++;
+
+
+nextXP *= 2;
+
+
+notify(
+"🎉 Новый уровень: " + lvl
+);
+
+
+checkAchievements();
+
+
+}
+
+
+}
+
+
+
+
+
+
+// =====================
+// ПОКУПКА
+// =====================
+
+function buy(i){
+
+
+let u=upgrades[i];
+
+
+if(score>=u.cost && !u.bought){
+
+
+score-=u.cost;
+
+
+u.bought=true;
+
+
+power+=u.power;
+
+
+auto+=u.auto;
+
+
+buyCount++;
+
+
+notify(
+"🛒 Куплено: "+u.name
+);
+
+
+
+buySound.currentTime=0;
+buySound.play();
+
+
+
+checkAchievements();
+
+
+renderShop();
+
+
+update();
+
+
+save();
+
+
+}
+
+else{
+
+
+notify(
+"❌ Недостаточно очков"
+);
+
+
+
+errorSound.currentTime=0;
+errorSound.play();
+
+
+
+}
+
+
+}
+
+
+
+
+
+
+// =====================
+// ДОСТИЖЕНИЯ
+// =====================
+
+function checkAchievements(){
+
+
+achData.forEach(a=>{
+
+
+if(
+a.check()
+&&
+!achievements.includes(a.id)
+
+){
+
+
+achievements.push(a.id);
+
+
+notify(
+"🏆 Получено: "+a.name
+);
+
+
+
+notificationSound.currentTime=0;
+notificationSound.play();
+
+
+
+}
+
+
+});
+
+
+updateAchievements();
+
+
+}
+
+
+
+
+
+
+function updateAchievements(){
+
+
+let box=document.getElementById("achlist");
+
+
+let html="";
+
+
+achData.forEach(a=>{
+
+
+if(
+achievements.includes(a.id)
+
+){
+
+
+html+="✅ "+a.name+"<br>";
+
+
+}
+
+else{
+
+
+html+="🔒 ???<br>";
+
+
+}
+
+
+});
+
+
+box.innerHTML=html;
+
+
+document.getElementById("achCount")
+.innerText=achievements.length;
+
+
+}
+
+
+
+
+
+
+// =====================
+// УВЕДОМЛЕНИЯ
+// =====================
+
+function notify(text){
+
+
+let n=document.getElementById("notify");
+
+
+n.innerText=text;
+
+
+n.style.display="block";
+
+
+setTimeout(()=>{
+
+
+n.style.display="none";
+
+
+},2500);
+
+
+}
+
+
+
+
+
+
+// =====================
+// ОБНОВЛЕНИЕ
+// =====================
+
+function update(){
+
+
+document.getElementById("score")
+.innerText=score;
+
+
+document.getElementById("power")
+.innerText=power;
+
+
+document.getElementById("auto")
+.innerText=auto;
+
+
+document.getElementById("lvl")
+.innerText=lvl;
+
+
+document.getElementById("total")
+.innerText=total;
+
+
+document.getElementById("buyc")
+.innerText=buyCount;
+
+
+
+document.getElementById("xp")
+.innerText=xp;
+
+
+
+document.getElementById("nextXP")
+.innerText=nextXP;
+
+
+
+document.getElementById("xpbar")
+.style.width=
+Math.min(
+(xp/nextXP)*100,
+100
+)+"%";
+
+
+}
+
+
+
+
+
+
+// =====================
+// МЕНЮ
+// =====================
+
+function show(id){
+
+
+document
+.querySelectorAll(".screen")
+.forEach(
+x=>x.classList.remove("active")
+);
+
+
+
+document
+.getElementById(id)
+.classList.add("active");
+
+
+}
+
+
+
+
+
+
+
+// =====================
+// МАГАЗИН
+// =====================
+
+function renderShop(){
+
+
+let shop=document.getElementById("shopList");
+
+shop.innerHTML="";
+
+
+upgrades.forEach((u,i)=>{
+
+
+let div=document.createElement("div");
+
+
+div.className="shopItem";
+
+
+
+if(u.bought){
+
+
+div.innerHTML=`
+
+<b>${u.name}</b>
+
+<br>
+
+✅ Куплено
+
+<br>
+
+⚔️ +${u.power}
+
+<br>
+
+🤖 +${u.auto}
+
+`;
+
+
+}
+
+else{
+
+
+div.innerHTML=`
+
+<b>${u.name}</b>
+
+<br>
+
+💰 Цена: ${u.cost}
+
+<br>
+
+⚔️ +${u.power}
+
+<br>
+
+🤖 +${u.auto}
+
+<br><br>
+
+<button onclick="buy(${i})">
+
+Купить
+
+</button>
+
+`;
+
+
+}
+
+
+shop.appendChild(div);
+
+
+});
+
+
+}
+
+
+
+
+
+
+// =====================
+// АВТОКЛИКЕР
+// =====================
+
+
+setInterval(()=>{
+
+
+if(auto>0){
+
+
+score+=auto;
+
+
+total+=auto;
+
+
+addXP(auto);
+
+
+checkAchievements();
+
+
+update();
+
+
+save();
+
+
+}
+
+
+},1000);
+
+
+
+
+
+
+
+
+// =====================
+// СОХРАНЕНИЕ
+// =====================
+
+function save(){
+
+
+localStorage.setItem(
+
+"superClicker",
+
+JSON.stringify({
+
+score,
+
+power,
+
+auto,
+
+total,
+
+lvl,
+
+xp,
+
+nextXP,
+
+buyCount,
+
+achievements,
+
+upgrades
+
+
+})
+
+);
+
+
+}
+
+
+
+
+
+
+// =====================
+// ЗАГРУЗКА
+// =====================
+
+function load(){
+
+
+let data=
+JSON.parse(
+localStorage.getItem("superClicker")
+);
+
+
+
+if(data){
+
+
+score=data.score||0;
+
+
+power=data.power||1;
+
+
+auto=data.auto||0;
+
+
+total=data.total||0;
+
+
+lvl=data.lvl||1;
+
+
+xp=data.xp||0;
+
+
+nextXP=data.nextXP||1000;
+
+
+buyCount=data.buyCount||0;
+
+
+
+achievements=
+data.achievements||[];
+
+
+
+if(data.upgrades){
+
+upgrades=data.upgrades;
+
+}
+
+
+
+}
+
+
+}
+
+
+
+
+
+
+
+// =====================
+// ЗАПУСК
+// =====================
+
+load();
+
+
+renderShop();
+
+
+update();
+
+
+updateAchievements();
+
+
+
+</script>
+
+
+</body>
+
+  </html>
