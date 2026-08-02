@@ -499,6 +499,84 @@ nav button#logoutBtn:hover {
   font-size: 14px;
 }
 
+/* ===== ПАСХАЛКА ===== */
+.egg-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: eggFade .5s;
+}
+
+.egg-overlay.show {
+  display: flex;
+}
+
+@keyframes eggFade {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.egg-content {
+  background: linear-gradient(145deg, #1e293b, #020617);
+  padding: 30px;
+  border-radius: 30px;
+  max-width: 400px;
+  text-align: center;
+  border: 3px solid #fbbf24;
+  box-shadow: 0 0 60px #fbbf2440;
+  animation: eggBounce .6s ease;
+}
+
+@keyframes eggBounce {
+  0% { transform: scale(0) rotate(-10deg); }
+  50% { transform: scale(1.1) rotate(3deg); }
+  70% { transform: scale(0.95) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.egg-content img {
+  max-width: 200px;
+  border-radius: 20px;
+  margin-bottom: 15px;
+}
+
+.egg-content h2 {
+  color: #fbbf24;
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.egg-content p {
+  color: #94a3b8;
+  font-size: 16px;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.egg-content .egg-btn {
+  background: #fbbf24;
+  color: #020617;
+  border: 0;
+  padding: 10px 30px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: .3s;
+}
+
+.egg-content .egg-btn:hover {
+  transform: scale(1.05);
+  background: #f59e0b;
+}
+
 @media (max-width: 500px) {
   .title { font-size: 24px; }
   .bigbtn { height: 90px; font-size: 28px; }
@@ -506,11 +584,26 @@ nav button#logoutBtn:hover {
   .stat div b { font-size: 14px; }
   nav button { font-size: 10px; padding: 5px 6px; }
   .shopItem { font-size: 11px; padding: 6px 8px; }
+  .egg-content { padding: 20px; margin: 15px; }
+  .egg-content img { max-width: 150px; }
 }
 </style>
 </head>
 
 <body>
+
+<!-- ===== ПАСХАЛКА ===== -->
+<div id="eggOverlay" class="egg-overlay">
+  <div class="egg-content">
+    <img id="eggImage" src="IMG_20260803_011509.jpg" alt="Поздравляю!">
+    <h2>🥚 СЕКРЕТ НАЙДЕН!</h2>
+    <p id="eggText">Андрей, ты особенный игрок! 👑</p>
+    <button class="egg-btn" onclick="closeEgg()">🔥 Понял!</button>
+  </div>
+</div>
+
+<!-- Звук пасхалки -->
+<audio id="eggSound" src="option-21.mp3"></audio>
 
 <div id="notify"></div>
 
@@ -672,12 +765,14 @@ const clickSound = document.getElementById('clickSound');
 const buySound = document.getElementById('buySound');
 const errorSound = document.getElementById('errorSound');
 const notificationSound = document.getElementById('notificationSound');
+const eggSound = document.getElementById('eggSound');
 
 bgMusic.volume = 0.08;
 clickSound.volume = 0.25;
 buySound.volume = 0.25;
 errorSound.volume = 0.2;
 notificationSound.volume = 0.3;
+if (eggSound) eggSound.volume = 0.5;
 
 document.addEventListener('click', () => {
   if (bgMusic.paused) bgMusic.play();
@@ -705,7 +800,7 @@ let shopFilter = 'all';
 let isInitialLoad = true;
 
 // ================================================================
-// 300 УЛУЧШЕНИЙ (ИСПРАВЛЕННЫЕ)
+// 300 УЛУЧШЕНИЙ
 // ================================================================
 let upgrades = [];
 
@@ -762,7 +857,7 @@ for (let i = 1; i <= 300; i++) {
 }
 
 // ================================================================
-// ДОСТИЖЕНИЯ (40 штук с ID цифрами)
+// ДОСТИЖЕНИЯ
 // ================================================================
 let achData = [
   { id: 1, name: '👆 Первый клик', check: () => total >= 1 },
@@ -835,7 +930,7 @@ function buy(index) {
   if (!u || u.bought) return;
   
   if (score < u.cost) {
-    notify('❌ Нужно: ' + u.cost.toLocaleString());
+    notify('❌ Нужно: ' + u.cost.toLocaleString(), 'error');
     errorSound.currentTime = 0;
     errorSound.play();
     return;
@@ -1087,12 +1182,62 @@ async function registerUser() {
   }
 }
 
+// ===== ПАСХАЛКА =====
+let eggShown = false;
+let eggTriggered = false;
+
+function showEgg() {
+  if (eggShown) return;
+  eggShown = true;
+  eggTriggered = true;
+  
+  const overlay = document.getElementById('eggOverlay');
+  overlay.classList.add('show');
+  
+  document.getElementById('eggText').innerHTML = `
+    🎉 Андрей, ты нашёл секретный доступ!<br>
+    Ты получаешь +1000 очков и звание "Избранный"! 👑
+  `;
+  
+  if (eggSound) {
+    eggSound.currentTime = 0;
+    eggSound.play().catch(() => {});
+  }
+  
+  setTimeout(() => {
+    score += 1000;
+    total += 1000;
+    update();
+    notify('🎁 Ты получил 1000 бонусных очков!', '');
+    saveToServer();
+  }, 1000);
+}
+
+function closeEgg() {
+  const overlay = document.getElementById('eggOverlay');
+  overlay.classList.remove('show');
+}
+
 async function loginUser() {
-  const username = document.getElementById('loginUsername').value.trim();
+  const usernameInput = document.getElementById('loginUsername');
+  const username = usernameInput.value.trim();
+  const usernameLower = username.toLowerCase();
   const password = document.getElementById('loginPassword').value;
   const remember = document.getElementById('rememberMe').checked;
   const status = document.getElementById('authStatus');
   
+  // ===== ПРОВЕРКА НА ПАСХАЛКУ =====
+  if (usernameLower === 'андрей' || usernameLower === 'andrei' || usernameLower === 'andrey') {
+    showEgg();
+    // Очищаем поля и выходим — ВХОДА НЕ БУДЕТ!
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+    status.innerText = '🥚 Секрет найден!';
+    status.style.color = '#fbbf24';
+    return; // ← ВЫХОДИМ, НЕ ДЕЛАЕМ ВХОД
+  }
+  
+  // ===== ОБЫЧНЫЙ ВХОД ДЛЯ ВСЕХ ОСТАЛЬНЫХ =====
   if (!username || !password) {
     status.innerText = '❌ Введите логин и пароль';
     return;
@@ -1120,7 +1265,6 @@ async function loginUser() {
     if (data.success) {
       currentUser = data;
       
-      // Загружаем данные
       score = data.score || 0;
       power = data.power || 1;
       auto = data.auto || 0;
@@ -1132,7 +1276,6 @@ async function loginUser() {
         achievements = data.achievements;
       }
       
-      // Восстанавливаем магазин
       if (data.upgrades && data.upgrades.length > 0) {
         data.upgrades.forEach((saved, index) => {
           if (index < upgrades.length && saved.bought) {
@@ -1141,7 +1284,6 @@ async function loginUser() {
         });
       }
       
-      // Сохраняем для автовхода
       if (remember) {
         localStorage.setItem('clicker_user', JSON.stringify({
           username: username,
@@ -1190,7 +1332,6 @@ function logout() {
     window._saveInterval = null;
   }
   
-  // Сохраняем перед выходом
   saveToServer();
   
   currentUser = null;
@@ -1203,7 +1344,6 @@ function logout() {
   document.getElementById('authStatus').innerText = '👋 До свидания!';
   document.getElementById('authStatus').style.color = '#fbbf24';
   
-  // Сбрасываем локальные данные
   score = 0;
   power = 1;
   auto = 0;
@@ -1280,7 +1420,6 @@ function autoLogin() {
         
         loadLeaderboard();
         
-        // Показываем уведомление только при первом запуске
         if (isInitialLoad) {
           notify('🔓 Добро пожаловать, ' + user.username + '!');
           isInitialLoad = false;
@@ -1504,7 +1643,6 @@ async function adminUnlockAchievement() {
     return;
   }
   
-  // Проверяем, существует ли такое достижение
   const exists = achData.some(a => a.id === achievId);
   if (!exists) {
     notify('❌ Достижение #' + achievId + ' не существует', 'error');
@@ -1583,4 +1721,4 @@ console.log('🏅 Достижений:', achData.length);
 </script>
 
 </body>
-      </html>
+                                             </html>
