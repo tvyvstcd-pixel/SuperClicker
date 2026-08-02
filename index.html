@@ -30,19 +30,21 @@ nav {
   top: 0;
   z-index: 20;
   backdrop-filter: blur(10px);
+  flex-wrap: wrap;
 }
 
 nav button {
   background: #334155;
   border: 0;
   color: white;
-  padding: 10px 15px;
+  padding: 10px 12px;
   border-radius: 12px;
   cursor: pointer;
   transition: .3s;
-  font-size: 14px;
+  font-size: 13px;
   flex: 1;
-  margin: 0 3px;
+  margin: 3px;
+  min-width: 60px;
 }
 
 nav button:hover {
@@ -90,7 +92,7 @@ nav button:hover {
   margin: 5px;
   padding: 12px;
   border-radius: 15px;
-  min-width: 100px;
+  min-width: 80px;
   flex: 1;
 }
 
@@ -173,7 +175,6 @@ nav button:hover {
   font-size: 13px;
 }
 
-/* Стили для авторизации */
 .auth-input {
   width: 85%;
   padding: 14px;
@@ -217,7 +218,6 @@ nav button:hover {
   color: #93c5fd;
 }
 
-/* Стили для лидерборда */
 .leaderboard-item {
   display: flex;
   justify-content: space-between;
@@ -255,78 +255,69 @@ nav button:hover {
   margin-left: 8px;
 }
 
-/* Скрываем навигацию до авторизации */
 #mainNav {
   display: none;
 }
 
-/* Адаптив для телефона */
 @media (max-width: 500px) {
   .title { font-size: 28px; }
   .bigbtn { height: 100px; font-size: 30px; }
-  .stat div { min-width: 70px; font-size: 14px; }
-  nav button { font-size: 12px; padding: 8px 5px; }
+  .stat div { min-width: 60px; font-size: 13px; padding: 8px; }
+  nav button { font-size: 11px; padding: 6px 8px; }
 }
 </style>
 </head>
 
 <body>
 
-<!-- Уведомления -->
 <div id="notify"></div>
 
-<!-- Звуки -->
 <audio id="bgMusic" src="Fonovaya.mp3" loop></audio>
 <audio id="clickSound" src="Click.wav"></audio>
 <audio id="buySound" src="BuySound.mp3"></audio>
 <audio id="errorSound" src="error.mp3"></audio>
 <audio id="notificationSound" src="notification.mp3"></audio>
 
-<!-- ==================== ЭКРАН АВТОРИЗАЦИИ ==================== -->
+<!-- ========== АВТОРИЗАЦИЯ ========== -->
 <div id="authScreen" class="screen active">
   <div class="card" style="max-width:400px;margin-top:50px;">
     <h2 style="margin-bottom:20px;">🔐 Вход в игру</h2>
-    
     <div id="loginForm">
       <input id="loginUsername" class="auth-input" placeholder="👤 Логин" autocomplete="username">
       <input id="loginPassword" class="auth-input" type="password" placeholder="🔑 Пароль" autocomplete="current-password">
       <button onclick="loginUser()" class="auth-btn" style="background:#3b82f6;color:white;">Войти</button>
       <p style="margin-top:15px;">Нет аккаунта? <span onclick="showRegister()" class="auth-link">Зарегистрироваться</span></p>
     </div>
-    
     <div id="registerForm" style="display:none;">
       <input id="regUsername" class="auth-input" placeholder="👤 Логин (мин 3)" autocomplete="username">
       <input id="regPassword" class="auth-input" type="password" placeholder="🔑 Пароль (мин 4)" autocomplete="new-password">
       <button onclick="registerUser()" class="auth-btn" style="background:#22c55e;color:white;">Зарегистрироваться</button>
       <p style="margin-top:15px;">Уже есть аккаунт? <span onclick="showLogin()" class="auth-link">Войти</span></p>
     </div>
-    
     <p id="authStatus" style="color:#fbbf24;margin-top:15px;min-height:24px;"></p>
   </div>
 </div>
 
-<!-- ==================== ОСНОВНАЯ ИГРА ==================== -->
+<!-- ========== НАВИГАЦИЯ ========== -->
 <nav id="mainNav">
   <button onclick="show('game')">⚔️ Игра</button>
   <button onclick="show('shop')">🛒 Магазин</button>
   <button onclick="show('leaderboard')">🏆 Лидеры</button>
+  <button onclick="show('ach')">🏅 Достижения</button>
   <button onclick="show('stats')">📊 Статы</button>
   <button onclick="logout()" style="background:#dc2626;">🚪 Выйти</button>
 </nav>
 
-<!-- ИГРА -->
+<!-- ========== ИГРА ========== -->
 <div id="game" class="screen">
   <h1 class="title">🔥 Super Clicker</h1>
-  
   <div class="card stat">
     <div>💰 Очки<br><b id="score">0</b></div>
     <div>⚔️ Сила<br><b id="power">1</b></div>
     <div>🤖 Авто<br><b id="auto">0</b></div>
     <div>⭐ Уровень<br><b id="lvl">1</b></div>
   </div>
-  
   <button class="bigbtn" onclick="clicker(); playClick();">КЛИК</button>
-  
   <div class="card">
     <h3>Опыт</h3>
     <div class="progress"><span id="xpbar"></span></div>
@@ -334,14 +325,14 @@ nav button:hover {
   </div>
 </div>
 
-<!-- МАГАЗИН -->
+<!-- ========== МАГАЗИН ========== -->
 <div id="shop" class="screen">
   <h2>🛒 Магазин улучшений</h2>
   <div class="card"><p class="small">Покупай предметы и становись сильнее!</p></div>
   <div id="shopList"></div>
 </div>
 
-<!-- ЛИДЕРЫ -->
+<!-- ========== ЛИДЕРЫ ========== -->
 <div id="leaderboard" class="screen">
   <h2>🏆 Таблица лидеров</h2>
   <div class="card">
@@ -351,7 +342,15 @@ nav button:hover {
   </div>
 </div>
 
-<!-- СТАТИСТИКА -->
+<!-- ========== ДОСТИЖЕНИЯ ========== -->
+<div id="ach" class="screen">
+  <h2>🏅 Достижения</h2>
+  <div class="card">
+    <div id="achlist">Нет открытых достижений</div>
+  </div>
+</div>
+
+<!-- ========== СТАТИСТИКА ========== -->
 <div id="stats" class="screen">
   <h2>📊 Статистика</h2>
   <div class="card">
@@ -364,7 +363,7 @@ nav button:hover {
 
 <script>
 // ================================================================
-// 1. НАСТРОЙКИ (ВСТАВЬ СЮДА СВОЙ URL)
+// 1. НАСТРОЙКИ (ВСТАВЬ СВОЙ URL)
 // ================================================================
 const API_URL = 'https://superclicker.onrender.com'; // 🔥 ЗАМЕНИ НА СВОЙ URL
 
@@ -512,7 +511,8 @@ function updateAchievements() {
       : '🔒 ???<br>';
   });
   box.innerHTML = html;
-  document.getElementById('achCount').innerText = achievements.length;
+  let achCount = document.getElementById('achCount');
+  if (achCount) achCount.innerText = achievements.length;
 }
 
 // ================================================================
@@ -672,31 +672,26 @@ async function loginUser() {
       status.innerText = '✅ Добро пожаловать, ' + username + '!';
       status.style.color = '#4ade80';
       
-      // Загружаем данные
       score = data.score || 0;
       power = data.power || 1;
       auto = data.auto || 0;
       lvl = data.level || 1;
       total = data.total || 0;
       
-      update();
-      
-      // Показываем игру
-      document.getElementById('authScreen').classList.remove('active');
-      document.getElementById('mainNav').style.display = 'flex';
-      show('game');
-      
-      // Загружаем локальные достижения (если есть)
       if (data.achievements) {
         achievements = data.achievements;
         updateAchievements();
       }
       
-      // Автосохранение каждые 10 секунд
+      update();
+      
+      document.getElementById('authScreen').classList.remove('active');
+      document.getElementById('mainNav').style.display = 'flex';
+      show('game');
+      
       if (window._saveInterval) clearInterval(window._saveInterval);
       window._saveInterval = setInterval(saveToServer, 10000);
       
-      // Загружаем таблицу лидеров
       loadLeaderboard();
       
     } else {
@@ -744,7 +739,6 @@ async function saveToServer() {
       })
     });
   } catch (e) {
-    // Тихо сохраняем в локальное хранилище как резерв
     localStorage.setItem('clicker_backup_' + currentUser?.username, JSON.stringify({
       score, power, auto, total, lvl, xp, nextXP, buyCount, achievements, upgrades
     }));
@@ -786,7 +780,6 @@ async function loadLeaderboard() {
   }
 }
 
-// Автообновление таблицы каждую минуту
 setInterval(() => {
   if (document.getElementById('leaderboard').classList.contains('active')) {
     loadLeaderboard();
@@ -794,45 +787,17 @@ setInterval(() => {
 }, 60000);
 
 // ================================================================
-// 13. ЗАГРУЗКА ЛОКАЛЬНЫХ ДАННЫХ (РЕЗЕРВ)
+// 13. ЗАПУСК
 // ================================================================
-function loadLocalBackup(username) {
-  try {
-    const data = JSON.parse(localStorage.getItem('clicker_backup_' + username));
-    if (data) {
-      score = data.score || 0;
-      power = data.power || 1;
-      auto = data.auto || 0;
-      total = data.total || 0;
-      lvl = data.lvl || 1;
-      xp = data.xp || 0;
-      nextXP = data.nextXP || 1000;
-      buyCount = data.buyCount || 0;
-      achievements = data.achievements || [];
-      upgrades = data.upgrades || upgrades;
-      update();
-      updateAchievements();
-    }
-  } catch (e) {}
-}
-
-// ================================================================
-// 14. ЗАПУСК
-// ================================================================
-// Скрываем навигацию до входа
 document.getElementById('mainNav').style.display = 'none';
-
-// Показываем экран авторизации
 document.getElementById('authScreen').classList.add('active');
 
-// Инициализация
 renderShop();
 update();
 updateAchievements();
 
 console.log('🔥 Super Clicker Online загружен!');
 console.log('📍 API_URL:', API_URL);
-console.log('💡 Не забудь изменить API_URL на свой сервер!');
 </script>
 
 </body>
