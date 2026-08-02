@@ -130,27 +130,6 @@ nav button:hover {
   transition: .3s;
 }
 
-.shopItem {
-  background: #111827;
-  border-radius: 18px;
-  padding: 15px;
-  margin: 10px;
-  border: 1px solid #334155;
-}
-
-.shopItem button {
-  background: #22c55e;
-  color: white;
-  border: 0;
-  padding: 10px 25px;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
-.shopItem button:hover {
-  background: #16a34a;
-}
-
 #notify {
   position: fixed;
   top: 80px;
@@ -276,6 +255,193 @@ nav button:hover {
   cursor: pointer;
 }
 
+/* ===== МАГАЗИН С 300 УЛУЧШЕНИЯМИ ===== */
+#shopList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+#shopList::-webkit-scrollbar {
+  width: 6px;
+}
+
+#shopList::-webkit-scrollbar-track {
+  background: #0f172a;
+  border-radius: 10px;
+}
+
+#shopList::-webkit-scrollbar-thumb {
+  background: #2563eb;
+  border-radius: 10px;
+}
+
+.shopItem {
+  background: #111827;
+  border-radius: 12px;
+  padding: 12px 15px;
+  margin: 0;
+  border: 1px solid #334155;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  transition: .2s;
+}
+
+.shopItem:hover {
+  border-color: #2563eb;
+  transform: scale(1.01);
+}
+
+.shopItem.bought {
+  border-color: #22c55e;
+  opacity: 0.7;
+}
+
+.shopItem .info {
+  text-align: left;
+  flex: 1;
+  min-width: 150px;
+}
+
+.shopItem .info .name {
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.shopItem .info .details {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.shopItem .price {
+  font-weight: bold;
+  color: #fbbf24;
+  margin: 0 10px;
+}
+
+.shopItem button {
+  background: #22c55e;
+  color: white;
+  border: 0;
+  padding: 8px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: .2s;
+  min-width: 80px;
+}
+
+.shopItem button:hover {
+  background: #16a34a;
+  transform: scale(1.05);
+}
+
+.shopItem button:disabled {
+  background: #334155;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.shopItem .badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #2563eb;
+  margin-left: 8px;
+}
+
+.shopItem .badge.mega {
+  background: #f59e0b;
+}
+
+.shopItem .badge.ultra {
+  background: #8b5cf6;
+}
+
+.shop-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.shop-filters button {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: .2s;
+}
+
+.shop-filters button:hover,
+.shop-filters button.active {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.shop-stats {
+  display: flex;
+  justify-content: space-around;
+  font-size: 13px;
+  opacity: 0.8;
+  padding: 5px 0;
+}
+
+.shop-stats span {
+  background: #0f172a;
+  padding: 4px 12px;
+  border-radius: 10px;
+}
+
+/* ===== АДМИН-ПАНЕЛЬ ===== */
+.admin-user-item {
+  background: #0f172a;
+  padding: 10px;
+  border-radius: 10px;
+  margin: 5px 0;
+  text-align: left;
+}
+
+.admin-user-item .username {
+  font-weight: bold;
+}
+
+.admin-user-item .role {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.admin-user-item .status {
+  font-size: 12px;
+}
+
+.admin-user-item .status.active {
+  color: #4ade80;
+}
+
+.admin-user-item .status.banned {
+  color: #f87171;
+}
+
+.admin-user-item .ban-reason {
+  font-size: 11px;
+  color: #fbbf24;
+}
+
+.admin-user-item .admin-note {
+  font-size: 11px;
+  color: #60a5fa;
+}
+
 @media (max-width: 500px) {
   .title { font-size: 28px; }
   .bigbtn { height: 100px; font-size: 30px; }
@@ -328,6 +494,7 @@ nav button:hover {
   <button onclick="show('leaderboard')">🏆 Лидеры</button>
   <button onclick="show('ach')">🏅 Достижения</button>
   <button onclick="show('stats')">📊 Статы</button>
+  <button id="adminBtn" onclick="show('admin')" style="display:none;background:#8b5cf6;">👑 Админ</button>
   <button onclick="logout()" style="background:#dc2626;">🚪 Выйти</button>
 </nav>
 
@@ -351,7 +518,22 @@ nav button:hover {
 <!-- ========== МАГАЗИН ========== -->
 <div id="shop" class="screen">
   <h2>🛒 Магазин улучшений</h2>
-  <div class="card"><p class="small">Покупай предметы и становись сильнее!</p></div>
+  <div class="card">
+    <p class="small">Покупай предметы и становись сильнее!</p>
+    
+    <div class="shop-stats">
+      <span>📦 Всего: <b id="shopTotal">0</b></span>
+      <span>✅ Куплено: <b id="shopBought">0</b></span>
+      <span>📊 Прогресс: <b id="shopProgress">0%</b></span>
+    </div>
+    
+    <div class="shop-filters">
+      <button data-filter="all" class="active" onclick="setShopFilter('all')">📋 Все</button>
+      <button data-filter="available" onclick="setShopFilter('available')">🆕 Доступные</button>
+      <button data-filter="bought" onclick="setShopFilter('bought')">✅ Купленные</button>
+      <button data-filter="special" onclick="setShopFilter('special')">⭐ Особые</button>
+    </div>
+  </div>
   <div id="shopList"></div>
 </div>
 
@@ -381,6 +563,45 @@ nav button:hover {
     <p>🖱 Всего кликов: <b id="total">0</b></p>
     <p>🛒 Покупок: <b id="buyc">0</b></p>
     <p>🏆 Достижений: <b id="achCount">0</b></p>
+  </div>
+</div>
+
+<!-- ========== АДМИН-ПАНЕЛЬ ========== -->
+<div id="admin" class="screen">
+  <h2>👑 Админ-панель</h2>
+  
+  <div class="card">
+    <h3>📊 Управление игроками</h3>
+    <div id="adminUserList">Загрузка...</div>
+  </div>
+  
+  <div class="card">
+    <h3>➕ Добавить очки</h3>
+    <input id="adminAddScoreUser" class="auth-input" placeholder="👤 Логин игрока">
+    <input id="adminAddScoreAmount" class="auth-input" type="number" placeholder="💰 Количество очков">
+    <button onclick="adminAddScore()" class="auth-btn" style="background:#22c55e;">Добавить очки</button>
+  </div>
+  
+  <div class="card">
+    <h3>🔨 Управление баном</h3>
+    <input id="adminBanUser" class="auth-input" placeholder="👤 Логин игрока">
+    <input id="adminBanReason" class="auth-input" placeholder="📝 Причина бана">
+    <button onclick="adminBan()" class="auth-btn" style="background:#dc2626;">Забанить</button>
+    <button onclick="adminUnban()" class="auth-btn" style="background:#22c55e;">Разбанить</button>
+  </div>
+  
+  <div class="card">
+    <h3>🏅 Открыть достижение</h3>
+    <input id="adminAchievUser" class="auth-input" placeholder="👤 Логин игрока">
+    <input id="adminAchievId" class="auth-input" placeholder="📌 ID достижения (first, hundred, thousand...)">
+    <button onclick="adminUnlockAchievement()" class="auth-btn" style="background:#8b5cf6;">Открыть</button>
+  </div>
+  
+  <div class="card">
+    <h3>📝 Приписка в таблице лидеров</h3>
+    <input id="adminNoteUser" class="auth-input" placeholder="👤 Логин игрока">
+    <input id="adminNoteText" class="auth-input" placeholder="📝 Текст приписки (например: 👑 Чемпион!)">
+    <button onclick="adminSetNote()" class="auth-btn" style="background:#3b82f6;">Установить приписку</button>
   </div>
 </div>
 
@@ -427,20 +648,56 @@ let nextXP = 1000;
 let buyCount = 0;
 let achievements = [];
 let currentUser = null;
+let shopFilter = 'all';
 
-// 50 Улучшений
+// ================================================================
+// 300 УЛУЧШЕНИЙ
+// ================================================================
 let upgrades = [];
-for (let i = 1; i <= 50; i++) {
+for (let i = 1; i <= 300; i++) {
+  const isSpecial = i % 5 === 0;
+  const isMega = i % 10 === 0;
+  const isUltra = i % 25 === 0;
+  
+  let powerBonus = 0;
+  let autoBonus = 0;
+  let name = '⚡ Улучшение ' + i;
+  
+  if (isUltra) {
+    powerBonus = Math.floor(i * 2.5);
+    autoBonus = Math.floor(i / 2);
+    name = '💎 Ультра ' + i;
+  } else if (isMega) {
+    powerBonus = Math.floor(i * 1.8);
+    autoBonus = Math.floor(i / 3);
+    name = '🔥 Мега ' + i;
+  } else if (isSpecial) {
+    powerBonus = Math.floor(i * 1.2);
+    autoBonus = Math.floor(i / 4);
+    name = '⭐ Особое ' + i;
+  } else {
+    if (i % 2 === 0) {
+      powerBonus = Math.floor(i * 0.7) + 1;
+    } else {
+      autoBonus = Math.floor(i / 3) + 1;
+    }
+  }
+  
+  const cost = Math.floor(30 * Math.pow(1.15, i));
+  
   upgrades.push({
-    name: '⚡ Улучшение ' + i,
-    cost: Math.floor(30 * Math.pow(1.18, i)),
-    power: i % 2 === 0 ? i : 0,
-    auto: i % 2 !== 0 ? Math.ceil(i / 2) : 0,
-    bought: false
+    name: name,
+    cost: cost,
+    power: powerBonus,
+    auto: autoBonus,
+    bought: false,
+    index: i
   });
 }
 
-// Достижения
+// ================================================================
+// ДОСТИЖЕНИЯ
+// ================================================================
 let achData = [
   { id: 'first', name: '👆 Первый клик', check: () => total >= 1 },
   { id: 'hundred', name: '🔥 100 кликов', check: () => total >= 100 },
@@ -564,6 +821,13 @@ function update() {
   if (currentUser) {
     document.getElementById('playerNameDisplay').innerText = currentUser.username;
   }
+  
+  // Статистика магазина
+  const totalUpgrades = upgrades.length;
+  const boughtUpgrades = upgrades.filter(u => u.bought).length;
+  document.getElementById('shopTotal').innerText = totalUpgrades;
+  document.getElementById('shopBought').innerText = boughtUpgrades;
+  document.getElementById('shopProgress').innerText = Math.round((boughtUpgrades / totalUpgrades) * 100) + '%';
 }
 
 // ================================================================
@@ -572,27 +836,66 @@ function update() {
 function renderShop() {
   let shop = document.getElementById('shopList');
   shop.innerHTML = '';
-  upgrades.forEach((u, i) => {
+  
+  let filtered = upgrades;
+  if (shopFilter === 'bought') {
+    filtered = upgrades.filter(u => u.bought);
+  } else if (shopFilter === 'available') {
+    filtered = upgrades.filter(u => !u.bought);
+  } else if (shopFilter === 'special') {
+    filtered = upgrades.filter(u => u.index % 5 === 0 && !u.bought);
+  }
+  
+  filtered.sort((a, b) => {
+    if (a.bought === b.bought) return a.index - b.index;
+    return a.bought ? 1 : -1;
+  });
+  
+  if (filtered.length === 0) {
+    shop.innerHTML = '<p style="opacity:0.5;padding:20px;">Нет улучшений для отображения</p>';
+    return;
+  }
+  
+  filtered.forEach((u) => {
     let div = document.createElement('div');
     div.className = 'shopItem';
+    if (u.bought) div.classList.add('bought');
+    
+    let badge = '';
+    if (u.index % 25 === 0) badge = '<span class="badge ultra">💎 УЛЬТРА</span>';
+    else if (u.index % 10 === 0) badge = '<span class="badge mega">🔥 МЕГА</span>';
+    else if (u.index % 5 === 0) badge = '<span class="badge">⭐ ОСОБОЕ</span>';
+    
     if (u.bought) {
       div.innerHTML = `
-        <b>${u.name}</b><br>
-        ✅ Куплено<br>
-        ⚔️ +${u.power}<br>
-        🤖 +${u.auto}
+        <div class="info">
+          <span class="name">${u.name}</span>
+          ${badge}
+          <div class="details">⚔️ +${u.power} | 🤖 +${u.auto}</div>
+        </div>
+        <span style="color:#22c55e;">✅ Куплено</span>
       `;
     } else {
       div.innerHTML = `
-        <b>${u.name}</b><br>
-        💰 Цена: ${u.cost}<br>
-        ⚔️ +${u.power}<br>
-        🤖 +${u.auto}<br><br>
-        <button onclick="buy(${i})">Купить</button>
+        <div class="info">
+          <span class="name">${u.name}</span>
+          ${badge}
+          <div class="details">⚔️ +${u.power} | 🤖 +${u.auto}</div>
+        </div>
+        <span class="price">💰 ${u.cost.toLocaleString()}</span>
+        <button onclick="buy(${u.index - 1})">Купить</button>
       `;
     }
     shop.appendChild(div);
   });
+}
+
+function setShopFilter(filter) {
+  shopFilter = filter;
+  document.querySelectorAll('.shop-filters button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  renderShop();
 }
 
 // ================================================================
@@ -602,6 +905,7 @@ function show(id) {
   document.querySelectorAll('.screen').forEach(x => x.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if (id === 'leaderboard') loadLeaderboard();
+  if (id === 'admin' && currentUser?.is_admin) loadAdminUsers();
 }
 
 // ================================================================
@@ -676,248 +980,4 @@ async function loginUser() {
   const remember = document.getElementById('rememberMe').checked;
   const status = document.getElementById('authStatus');
   
-  if (!username || !password) {
-    status.innerText = '❌ Введите логин и пароль';
-    return;
-  }
-  
-  status.innerText = '⏳ Вход...';
-  
-  try {
-    const response = await fetch(`${API_URL}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    const data = await response.json();
-    
-    if (data.success) {
-      currentUser = data;
-      
-      // ========== СОХРАНЯЕМ ВСЕ ДАННЫЕ ==========
-      if (remember) {
-        try {
-          localStorage.setItem('clicker_user', JSON.stringify({
-            username: username,
-            password: password,
-            user_id: data.user_id,
-            score: data.score || 0,
-            power: data.power || 1,
-            auto: data.auto || 0,
-            level: data.level || 1,
-            total: data.total || 0,
-            achievements: data.achievements || []
-          }));
-          console.log('✅ Данные сохранены в localStorage');
-        } catch (e) {
-          console.error('Ошибка сохранения:', e);
-        }
-      } else {
-        localStorage.removeItem('clicker_user');
-      }
-      
-      // Загружаем данные
-      score = data.score || 0;
-      power = data.power || 1;
-      auto = data.auto || 0;
-      lvl = data.level || 1;
-      total = data.total || 0;
-      
-      if (data.achievements) {
-        achievements = data.achievements;
-        updateAchievements();
-      }
-      
-      status.innerText = '✅ Добро пожаловать, ' + username + '!';
-      status.style.color = '#4ade80';
-      update();
-      
-      document.getElementById('authScreen').classList.remove('active');
-      document.getElementById('mainNav').style.display = 'flex';
-      show('game');
-      
-      if (window._saveInterval) clearInterval(window._saveInterval);
-      window._saveInterval = setInterval(saveToServer, 10000);
-      
-      loadLeaderboard();
-      
-    } else {
-      status.innerText = '❌ ' + data.error;
-      status.style.color = '#f87171';
-    }
-  } catch (e) {
-    status.innerText = '❌ Ошибка сервера. Проверьте интернет.';
-    status.style.color = '#f87171';
-  }
-}
-
-function logout() {
-  if (window._saveInterval) {
-    clearInterval(window._saveInterval);
-    window._saveInterval = null;
-  }
-  currentUser = null;
-  localStorage.removeItem('clicker_user'); // Удаляем сохраненные данные
-  document.getElementById('mainNav').style.display = 'none';
-  document.getElementById('authScreen').classList.add('active');
-  showLogin();
-  document.getElementById('authStatus').innerText = '👋 До свидания!';
-  document.getElementById('authStatus').style.color = '#fbbf24';
-}
-
-// ================================================================
-// 12. АВТОМАТИЧЕСКИЙ ВХОД (ПРИ ЗАГРУЗКЕ)
-// ================================================================
-function autoLogin() {
-  try {
-    const savedData = localStorage.getItem('clicker_user');
-    if (!savedData) {
-      console.log('Нет сохраненных данных');
-      return;
-    }
-    
-    const user = JSON.parse(savedData);
-    console.log('Найдены сохраненные данные для:', user.username);
-    
-    // Восстанавливаем данные
-    currentUser = {
-      username: user.username,
-      user_id: user.user_id
-    };
-    
-    score = user.score || 0;
-    power = user.power || 1;
-    auto = user.auto || 0;
-    lvl = user.level || 1;
-    total = user.total || 0;
-    achievements = user.achievements || [];
-    
-    update();
-    updateAchievements();
-    
-    document.getElementById('authScreen').classList.remove('active');
-    document.getElementById('mainNav').style.display = 'flex';
-    show('game');
-    
-    if (window._saveInterval) clearInterval(window._saveInterval);
-    window._saveInterval = setInterval(saveToServer, 10000);
-    
-    loadLeaderboard();
-    
-    notify('🔓 Добро пожаловать, ' + user.username + '!');
-    console.log('✅ Автовход выполнен');
-  } catch (e) {
-    console.error('Ошибка автовхода:', e);
-    localStorage.removeItem('clicker_user');
-  }
-}
-
-// ================================================================
-// 13. РАБОТА С СЕРВЕРОМ
-// ================================================================
-async function saveToServer() {
-  if (!currentUser) return;
-  try {
-    await fetch(`${API_URL}/save-score`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: currentUser.user_id,
-        username: currentUser.username,
-        score: score,
-        level: lvl,
-        power: power,
-        auto: auto,
-        total: total,
-        achievements: achievements,
-        upgrades: upgrades
-      })
-    });
-    
-    // Обновляем сохраненные данные в localStorage
-    try {
-      const saved = localStorage.getItem('clicker_user');
-      if (saved) {
-        const data = JSON.parse(saved);
-        data.score = score;
-        data.power = power;
-        data.auto = auto;
-        data.level = lvl;
-        data.total = total;
-        data.achievements = achievements;
-        localStorage.setItem('clicker_user', JSON.stringify(data));
-      }
-    } catch (e) {}
-    
-  } catch (e) {
-    // Сохраняем локально как резерв
-    localStorage.setItem('clicker_backup_' + currentUser?.username, JSON.stringify({
-      score, power, auto, total, lvl, xp, nextXP, buyCount, achievements, upgrades
-    }));
-  }
-}
-
-async function loadLeaderboard() {
-  const list = document.getElementById('leaderboardList');
-  if (!list) return;
-  list.innerHTML = '⏳ Загрузка...';
-  
-  try {
-    const response = await fetch(`${API_URL}/leaderboard`);
-    const data = await response.json();
-    
-    if (!data || data.length === 0) {
-      list.innerHTML = '🏆 Пока нет рекордов. Будь первым!';
-      return;
-    }
-    
-    let html = '';
-    data.forEach((item, index) => {
-      const isMe = currentUser && item.username === currentUser.username;
-      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index+1}.`;
-      html += `
-        <div class="leaderboard-item ${isMe ? 'me' : ''}">
-          <span class="leaderboard-rank">${medal}</span>
-          <span class="leaderboard-name">${item.username} ${isMe ? '⭐' : ''}</span>
-          <span>
-            <span class="leaderboard-score">${item.score.toLocaleString()}</span>
-            <span class="leaderboard-level">lv.${item.level}</span>
-          </span>
-        </div>
-      `;
-    });
-    list.innerHTML = html;
-  } catch (e) {
-    list.innerHTML = '❌ Не удалось загрузить таблицу. Проверьте интернет.';
-  }
-}
-
-setInterval(() => {
-  if (document.getElementById('leaderboard').classList.contains('active')) {
-    loadLeaderboard();
-  }
-}, 60000);
-
-// ================================================================
-// 14. ЗАПУСК
-// ================================================================
-document.getElementById('mainNav').style.display = 'none';
-document.getElementById('authScreen').classList.add('active');
-
-renderShop();
-update();
-updateAchievements();
-
-// ПРОБУЕМ АВТОВХОД
-setTimeout(autoLogin, 500);
-
-console.log('🔥 Super Clicker Online загружен!');
-console.log('📍 API_URL:', API_URL);
-
-// Проверяем, есть ли сохраненные данные
-const saved = localStorage.getItem('clicker_user');
-console.log('Сохраненные данные:', saved ? 'Есть ✅' : 'Нет ❌');
-</script>
-
-</body>
-</html>
+  if (!username
