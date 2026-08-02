@@ -980,4 +980,488 @@ async function loginUser() {
   const remember = document.getElementById('rememberMe').checked;
   const status = document.getElementById('authStatus');
   
-  if (!username
+  if (!username || !password) {
+    status.innerText = '❌ Введите логин и пароль';
+    return;
+  }
+  
+  status.innerText = '⏳ Вход...';
+  
+  try {
+    const response = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await response.json();
+    
+    // Проверка на бан
+    if (data.error && data.error.includes('забанены')) {
+      status.innerText = '⛔ ' + data.error;
+      status.style.color = '#f87171';
+      if (data.ban_reason) {
+        notify('⛔ Вы забанены! Причина: ' + data.ban_reason);
+      }
+      return;
+    }
+    
+    if (data.success) {
+      currentUser = data;
+      
+      if (remember) {
+        try {
+          localStorage.setItem('clicker_user', JSON.stringify({
+            username: username,
+            password: password,
+            user_id: data.user_id,
+            score: data.score || 0,
+            power: data.power || 1,
+            auto: data.auto || 0,
+            level: data.level || 1,
+            total: data.total || 0,
+            achievements: data.achievements || [],
+            is_admin: data.is_admin || false
+          }));
+        } catch (e) {}
+      } else {
+        localStorage.removeItem('clicker_user');
+      }
+      
+      score = data.score || 0;
+      power = data.power || 1;
+      auto = data.auto || 0;
+      lvl = data.level || 1;
+      total = data.total || 0;
+      
+      if (data.achievements) {
+        achievements = data.achievements;
+        updateAchievements();
+      }
+      
+      // Восстанавливаем прогресс магазина
+      if (data.upgrades && data.upgrades.length > 0) {
+        data.upgrades.forEach((saved, index) => {
+          if (index < upgrades.length && saved.bought) {
+            upgrades[index].bought = true;
+          }
+        });
+      }
+      
+      status.innerText = '✅ Добро пожаловать, ' + username + '!';
+      status.style.color = '#4ade80';
+      update();
+      renderShop();
+      
+      document.getElementById('authScreen').classList.remove('active');
+      document.getElementById('mainNav').style.display = 'flex';
+      
+      // Показываем админ-кнопку
+      if (currentUser.is_admin) {
+        document.getElementById('adminBtn').style.display = 'block';
+      }
+      
+      show('game');
+      
+      if (window._saveInterval) clearInterval(window._saveInterval);
+      window._saveInterval = setInterval(saveToServer, 10000);
+      
+      loadLeaderboard();
+      
+    } else {
+      status.innerText = '❌ ' + data.error;
+      status.style.color = '#f87171';
+    }
+  } catch (e) {
+    status.innerText = '❌ Ошибка сервера. Проверьте интернет.';
+    status.style.color = '#f87171';
+  }
+}
+
+function logout() {
+  if (window._saveInterval) {
+    clearInterval(window._saveInterval);
+    window._saveInterval = null;
+  }
+  currentUser = null;
+  localStorage.removeItem('clicker_user');
+  document.getElementById('mainNav').style.display = 'none';
+  document.getElementById('adminBtn').style.display = 'none';
+  document.getElementById('authScreen').classList.add('active');
+  showLogin();
+  document.getElementById('authStatus').innerText = '👋 До свидания!';
+  document.getElementById('authStatus').style.color = '#fbbf24';
+}
+
+// ================================================================
+// 12. АВТОВХОД
+// ================================================================
+function autoLogin() {
+  try {
+    const savedData = localStorage.getItem('clicker_user');
+    if (!savedData) return;
+    
+    const user = JSON.parse(savedData);
+    if (!user.username || !user.password) return;
+    
+    // Пробуем войти
+    fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        username: user.username, 
+        password: user.password 
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && !data.error) {
+        currentUser = data;
+        score = data.score || 0;
+        power = data.power || 1;
+        auto = data.auto || 0;
+        lvl = data.level || 1;
+        total = data.total || 0;
+        if (data.achievements) {
+          achievements = data.achievements;
+          updateAchievements();
+        }
+        if (data.upgrades && data.upgrades.length > 0) {
+          data.upgrades.forEach((saved, index) => {
+            if (index < upgrades.length && saved.bought) {
+              upgrades[index].bought = true;
+            }
+          });
+        }
+        update();
+        renderShop();
+        document.getElementById('authScreen').classList.remove('active');
+        document.getElementById('mainNav').style.display = 'flex';
+        if (currentUser.is_admin) {
+          document.getElementById('adminBtn').style.display = 'block';
+        }
+        show('game');
+        if (window._saveInterval) clearInterval(window._saveInterval);
+        window._saveInterval = setInterval(saveToServer, 10000);
+        loadLeaderboard();
+        notify('🔓 Добро пожаловать, ' + user.username + '!');
+      }
+    })
+    .catch(() => {});
+  } catch (e) {}
+}
+
+// ================================================================
+// 13. РАБОТА С СЕРВЕРОМ
+// ================================================================
+async function saveToServer() {
+  if (!currentUser) return;
+  try {
+    await fetch(`${API_URL}/save-score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: currentUser.user_id,
+        username: currentUser.username,
+        score: score,
+        level: lvl,
+        power: power,
+        auto: auto,
+        total: total,
+        achievements: achievements,
+        upgrades: upgrades.map(u => ({ bought: u.bought }))
+      })
+    });
+    
+    try {
+      const saved = localStorage.getItem('clicker_user');
+      if (saved) {
+        const data = JSON.parse(saved);
+        data.score = score;
+        data.power = power;
+        data.auto = auto;
+        data.level = lvl;
+        data.total = total;
+        data.achievements = achievements;
+        localStorage.setItem('clicker_user', JSON.stringify(data));
+      }
+    } catch (e) {}
+    
+  } catch (e) {
+    localStorage.setItem('clicker_backup_' + currentUser?.username, JSON.stringify({
+      score, power, auto, total, lvl, xp, nextXP, buyCount, achievements, upgrades
+    }));
+  }
+}
+
+// ================================================================
+// 14. ТАБЛИЦА ЛИДЕРОВ
+// ================================================================
+async function loadLeaderboard() {
+  const list = document.getElementById('leaderboardList');
+  if (!list) return;
+  list.innerHTML = '⏳ Загрузка...';
+  
+  try {
+    const response = await fetch(`${API_URL}/leaderboard`);
+    const data = await response.json();
+    
+    if (!data || data.length === 0) {
+      list.innerHTML = '🏆 Пока нет рекордов. Будь первым!';
+      return;
+    }
+    
+    let html = '';
+    data.forEach((item, index) => {
+      const isMe = currentUser && item.username === currentUser.username;
+      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index+1}.`;
+      html += `
+        <div class="leaderboard-item ${isMe ? 'me' : ''}">
+          <span class="leaderboard-rank">${medal}</span>
+          <span class="leaderboard-name">
+            ${item.username} 
+            ${item.is_admin ? '👑' : ''}
+            ${item.admin_note ? '📝' : ''}
+            ${isMe ? '⭐' : ''}
+          </span>
+          <span>
+            <span class="leaderboard-score">${item.score.toLocaleString()}</span>
+            <span class="leaderboard-level">lv.${item.level}</span>
+            ${item.admin_note ? `<br><span style="font-size:10px;color:#60a5fa;">${item.admin_note}</span>` : ''}
+          </span>
+        </div>
+      `;
+    });
+    list.innerHTML = html;
+  } catch (e) {
+    list.innerHTML = '❌ Не удалось загрузить таблицу. Проверьте интернет.';
+  }
+}
+
+setInterval(() => {
+  if (document.getElementById('leaderboard').classList.contains('active')) {
+    loadLeaderboard();
+  }
+}, 60000);
+
+// ================================================================
+// 15. АДМИН-ФУНКЦИИ
+// ================================================================
+
+function checkAdmin() {
+  if (currentUser && currentUser.is_admin) {
+    document.getElementById('adminBtn').style.display = 'block';
+  } else {
+    document.getElementById('adminBtn').style.display = 'none';
+  }
+}
+
+async function loadAdminUsers() {
+  const list = document.getElementById('adminUserList');
+  if (!list) return;
+  list.innerHTML = '⏳ Загрузка...';
+  
+  try {
+    const response = await fetch(`${API_URL}/admin/users?admin_id=${currentUser?.user_id}`);
+    const data = await response.json();
+    
+    if (!data || data.length === 0) {
+      list.innerHTML = 'Нет пользователей';
+      return;
+    }
+    
+    let html = '';
+    data.forEach(user => {
+      const score = user.scores?.[0] || {};
+      const status = user.is_banned ? '⛔ Забанен' : '✅ Активен';
+      const statusClass = user.is_banned ? 'banned' : 'active';
+      const role = user.is_admin ? '👑 Админ' : '👤 Игрок';
+      html += `
+        <div class="admin-user-item">
+          <div>
+            <span class="username">${user.username}</span>
+            <span class="role">${role}</span>
+          </div>
+          <div>💰 ${score.score || 0} очков | ⭐ Уровень ${score.level || 1}</div>
+          <div class="status ${statusClass}">${status}</div>
+          ${user.ban_reason ? `<div class="ban-reason">📌 ${user.ban_reason}</div>` : ''}
+          ${score.admin_note ? `<div class="admin-note">📝 ${score.admin_note}</div>` : ''}
+        </div>
+      `;
+    });
+    list.innerHTML = html;
+  } catch (e) {
+    list.innerHTML = '❌ Ошибка загрузки';
+  }
+}
+
+async function adminAddScore() {
+  const username = document.getElementById('adminAddScoreUser').value.trim();
+  const amount = parseInt(document.getElementById('adminAddScoreAmount').value);
+  
+  if (!username || !amount) {
+    notify('❌ Введите логин и количество очков');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/admin/add-score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        admin_id: currentUser.user_id,
+        username: username,
+        amount: amount
+      })
+    });
+    const data = await response.json();
+    if (data.success) {
+      notify(`✅ Добавлено ${amount} очков игроку ${username}`);
+      loadAdminUsers();
+    } else {
+      notify('❌ ' + data.error);
+    }
+  } catch (e) {
+    notify('❌ Ошибка сервера');
+  }
+}
+
+async function adminBan() {
+  const username = document.getElementById('adminBanUser').value.trim();
+  const reason = document.getElementById('adminBanReason').value.trim() || 'Нарушение правил';
+  
+  if (!username) {
+    notify('❌ Введите логин игрока');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/admin/ban`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        admin_id: currentUser.user_id,
+        username: username,
+        reason: reason
+      })
+    });
+    const data = await response.json();
+    if (data.success) {
+      notify(`✅ Игрок ${username} забанен`);
+      loadAdminUsers();
+    } else {
+      notify('❌ ' + data.error);
+    }
+  } catch (e) {
+    notify('❌ Ошибка сервера');
+  }
+}
+
+async function adminUnban() {
+  const username = document.getElementById('adminBanUser').value.trim();
+  
+  if (!username) {
+    notify('❌ Введите логин игрока');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/admin/unban`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        admin_id: currentUser.user_id,
+        username: username
+      })
+    });
+    const data = await response.json();
+    if (data.success) {
+      notify(`✅ Игрок ${username} разбанен`);
+      loadAdminUsers();
+    } else {
+      notify('❌ ' + data.error);
+    }
+  } catch (e) {
+    notify('❌ Ошибка сервера');
+  }
+}
+
+async function adminUnlockAchievement() {
+  const username = document.getElementById('adminAchievUser').value.trim();
+  const achievId = document.getElementById('adminAchievId').value.trim();
+  
+  if (!username || !achievId) {
+    notify('❌ Введите логин и ID достижения');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/admin/unlock-achievement`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        admin_id: currentUser.user_id,
+        username: username,
+        achievement_id: achievId
+      })
+    });
+    const data = await response.json();
+    if (data.success) {
+      notify(`✅ Достижение ${achievId} открыто для ${username}`);
+      loadAdminUsers();
+    } else {
+      notify('❌ ' + data.error);
+    }
+  } catch (e) {
+    notify('❌ Ошибка сервера');
+  }
+}
+
+async function adminSetNote() {
+  const username = document.getElementById('adminNoteUser').value.trim();
+  const note = document.getElementById('adminNoteText').value.trim();
+  
+  if (!username) {
+    notify('❌ Введите логин игрока');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/admin/set-note`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        admin_id: currentUser.user_id,
+        username: username,
+        note: note || ''
+      })
+    });
+    const data = await response.json();
+    if (data.success) {
+      notify(`✅ Приписка установлена для ${username}`);
+      loadAdminUsers();
+    } else {
+      notify('❌ ' + data.error);
+    }
+  } catch (e) {
+    notify('❌ Ошибка сервера');
+  }
+}
+
+// ================================================================
+// 16. ЗАПУСК
+// ================================================================
+document.getElementById('mainNav').style.display = 'none';
+document.getElementById('authScreen').classList.add('active');
+
+renderShop();
+update();
+updateAchievements();
+
+setTimeout(autoLogin, 500);
+
+console.log('🔥 Super Clicker Online загружен!');
+console.log('📍 API_URL:', API_URL);
+</script>
+
+</body>
+</html>
