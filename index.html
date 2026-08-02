@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔥 Super Clicker Online</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: radial-gradient(circle at top, #2563eb, #020617 70%);
+  color: white;
+  text-align: center;
+  min-height: 100vh;
+  padding-bottom: 20px;
+}
+
+nav {
+  display: flex;
+  justify-content: space-around;
+  background: rgba(15, 23, 42, .95);
+  padding: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(10px);
+}
+
+nav button {
+  background: #334155;
+  border: 0;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: .3s;
+  font-size: 14px;
+  flex: 1;
+  margin: 0 3px;
+}
+
+nav button:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.screen {
+  display: none;
+  padding: 20px;
+  animation: fadeIn .3s;
+}
+
+.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.title {
+  font-size: 38px;
+  text-shadow: 0 0 20px #60a5fa;
+}
+
+.card {
+  background: linear-gradient(145deg, #1e293b, #020617);
+  padding: 15px;
+  margin: 15px auto;
+  border-radius: 20px;
+  max-width: 500px;
+  box-shadow: 0 0 25px rgba(0,0,0,.5);
+}
+
+.stat {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.stat div {
+  background: #111827;
+  margin: 5px;
+  padding: 12px;
+  border-radius: 15px;
+  min-width: 100px;
+  flex: 1;
+}
+
+.bigbtn {
+  width: 85%;
+  max-width: 350px;
+  height: 140px;
+  font-size: 42px;
+  font-weight: bold;
+  border: 0;
+  border-radius: 35px;
+  background: linear-gradient(45deg, #2563eb, #38bdf8);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 0 35px #2563eb;
+  transition: .15s;
+}
+
+.bigbtn:active {
+  transform: scale(.9);
+}
+
+.progress {
+  height: 18px;
+  background: #020617;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: #22c55e;
+  width: 0%;
+  transition: .3s;
+}
+
+.shopItem {
+  background: #111827;
+  border-radius: 18px;
+  padding: 15px;
+  margin: 10px;
+  border: 1px solid #334155;
+}
+
+.shopItem button {
+  background: #22c55e;
+  color: white;
+  border: 0;
+  padding: 10px 25px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.shopItem button:hover {
+  background: #16a34a;
+}
+
+#notify {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  background: #22c55e;
+  padding: 15px 20px;
+  border-radius: 15px;
+  display: none;
+  z-index: 100;
+  animation: popup .4s;
+  max-width: 300px;
+  word-wrap: break-word;
+}
+
+@keyframes popup {
+  from { transform: translateX(200px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.small {
+  opacity: .7;
+  font-size: 13px;
+}
+
+/* Стили для авторизации */
+.auth-input {
+  width: 85%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 0;
+  margin: 8px auto;
+  font-size: 16px;
+  display: block;
+  background: #111827;
+  color: white;
+}
+
+.auth-input:focus {
+  outline: 2px solid #3b82f6;
+}
+
+.auth-btn {
+  width: 85%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 0;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 8px auto;
+  display: block;
+  transition: .3s;
+}
+
+.auth-btn:hover {
+  transform: scale(1.02);
+}
+
+.auth-link {
+  color: #60a5fa;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.auth-link:hover {
+  color: #93c5fd;
+}
+
+/* Стили для лидерборда */
+.leaderboard-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 8px;
+  background: #0f172a;
+}
+
+.leaderboard-item.me {
+  background: #2563eb40;
+  border: 1px solid #2563eb;
+}
+
+.leaderboard-rank {
+  font-weight: bold;
+  color: #fbbf24;
+  min-width: 30px;
+}
+
+.leaderboard-name {
+  flex: 1;
+  text-align: left;
+  margin-left: 10px;
+}
+
+.leaderboard-score {
+  font-weight: bold;
+  color: #34d399;
+}
+
+.leaderboard-level {
+  color: #94a3b8;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+/* Скрываем навигацию до авторизации */
+#mainNav {
+  display: none;
+}
+
+/* Адаптив для телефона */
+@media (max-width: 500px) {
+  .title { font-size: 28px; }
+  .bigbtn { height: 100px; font-size: 30px; }
+  .stat div { min-width: 70px; font-size: 14px; }
+  nav button { font-size: 12px; padding: 8px 5px; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- Уведомления -->
+<div id="notify"></div>
+
+<!-- Звуки -->
+<audio id="bgMusic" src="Fonovaya.mp3" loop></audio>
+<audio id="clickSound" src="Click.wav"></audio>
+<audio id="buySound" src="BuySound.mp3"></audio>
+<audio id="errorSound" src="error.mp3"></audio>
+<audio id="notificationSound" src="notification.mp3"></audio>
+
+<!-- ==================== ЭКРАН АВТОРИЗАЦИИ ==================== -->
+<div id="authScreen" class="screen active">
+  <div class="card" style="max-width:400px;margin-top:50px;">
+    <h2 style="margin-bottom:20px;">🔐 Вход в игру</h2>
+    
+    <div id="loginForm">
+      <input id="loginUsername" class="auth-input" placeholder="👤 Логин" autocomplete="username">
+      <input id="loginPassword" class="auth-input" type="password" placeholder="🔑 Пароль" autocomplete="current-password">
+      <button onclick="loginUser()" class="auth-btn" style="background:#3b82f6;color:white;">Войти</button>
+      <p style="margin-top:15px;">Нет аккаунта? <span onclick="showRegister()" class="auth-link">Зарегистрироваться</span></p>
+    </div>
+    
+    <div id="registerForm" style="display:none;">
+      <input id="regUsername" class="auth-input" placeholder="👤 Логин (мин 3)" autocomplete="username">
+      <input id="regPassword" class="auth-input" type="password" placeholder="🔑 Пароль (мин 4)" autocomplete="new-password">
+      <button onclick="registerUser()" class="auth-btn" style="background:#22c55e;color:white;">Зарегистрироваться</button>
+      <p style="margin-top:15px;">Уже есть аккаунт? <span onclick="showLogin()" class="auth-link">Войти</span></p>
+    </div>
+    
+    <p id="authStatus" style="color:#fbbf24;margin-top:15px;min-height:24px;"></p>
+  </div>
+</div>
+
+<!-- ==================== ОСНОВНАЯ ИГРА ==================== -->
+<nav id="mainNav">
+  <button onclick="show('game')">⚔️ Игра</button>
+  <button onclick="show('shop')">🛒 Магазин</button>
+  <button onclick="show('leaderboard')">🏆 Лидеры</button>
+  <button onclick="show('stats')">📊 Статы</button>
+  <button onclick="logout()" style="background:#dc2626;">🚪 Выйти</button>
+</nav>
+
+<!-- ИГРА -->
+<div id="game" class="screen">
+  <h1 class="title">🔥 Super Clicker</h1>
+  
+  <div class="card stat">
+    <div>💰 Очки<br><b id="score">0</b></div>
+    <div>⚔️ Сила<br><b id="power">1</b></div>
+    <div>🤖 Авто<br><b id="auto">0</b></div>
+    <div>⭐ Уровень<br><b id="lvl">1</b></div>
+  </div>
+  
+  <button class="bigbtn" onclick="clicker(); playClick();">КЛИК</button>
+  
+  <div class="card">
+    <h3>Опыт</h3>
+    <div class="progress"><span id="xpbar"></span></div>
+    <p><span id="xp">0</span> / <span id="nextXP">1000</span> XP</p>
+  </div>
+</div>
+
+<!-- МАГАЗИН -->
+<div id="shop" class="screen">
+  <h2>🛒 Магазин улучшений</h2>
+  <div class="card"><p class="small">Покупай предметы и становись сильнее!</p></div>
+  <div id="shopList"></div>
+</div>
+
+<!-- ЛИДЕРЫ -->
+<div id="leaderboard" class="screen">
+  <h2>🏆 Таблица лидеров</h2>
+  <div class="card">
+    <div id="leaderboardList" style="min-height:100px;">Загрузка...</div>
+    <p style="font-size:12px;opacity:0.5;margin-top:10px;">Обновляется каждую минуту</p>
+    <button onclick="loadLeaderboard()" style="background:#334155;border:0;color:white;padding:8px 20px;border-radius:10px;cursor:pointer;margin-top:10px;">🔄 Обновить</button>
+  </div>
+</div>
+
+<!-- СТАТИСТИКА -->
+<div id="stats" class="screen">
+  <h2>📊 Статистика</h2>
+  <div class="card">
+    <p>👤 Игрок: <b id="playerNameDisplay">-</b></p>
+    <p>🖱 Всего кликов: <b id="total">0</b></p>
+    <p>🛒 Покупок: <b id="buyc">0</b></p>
+    <p>🏆 Достижений: <b id="achCount">0</b></p>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// 1. НАСТРОЙКИ (ВСТАВЬ СЮДА СВОЙ URL)
+// ================================================================
+const API_URL = 'https://clicker-server.onrender.com'; // 🔥 ЗАМЕНИ НА СВОЙ URL
+
+// ================================================================
+// 2. ЗВУКИ
+// ================================================================
+const bgMusic = document.getElementById('bgMusic');
+const clickSound = document.getElementById('clickSound');
+const buySound = document.getElementById('buySound');
+const errorSound = document.getElementById('errorSound');
+const notificationSound = document.getElementById('notificationSound');
+
+bgMusic.volume = 0.08;
+clickSound.volume = 0.25;
+buySound.volume = 0.25;
+errorSound.volume = 0.2;
+notificationSound.volume = 0.3;
+
+document.addEventListener('click', () => {
+  if (bgMusic.paused) bgMusic.play();
+}, { once: true });
+
+function playClick() {
+  clickSound.currentTime = 0;
+  clickSound.play();
+}
+
+// ================================================================
+// 3. ИГРОВЫЕ ПЕРЕМЕННЫЕ
+// ================================================================
+let score = 0;
+let power = 1;
+let auto = 0;
+let total = 0;
+let lvl = 1;
+let xp = 0;
+let nextXP = 1000;
+let buyCount = 0;
+let achievements = [];
+let currentUser = null;
+
+// 50 Улучшений
+let upgrades = [];
+for (let i = 1; i <= 50; i++) {
+  upgrades.push({
+    name: '⚡ Улучшение ' + i,
+    cost: Math.floor(30 * Math.pow(1.18, i)),
+    power: i % 2 === 0 ? i : 0,
+    auto: i % 2 !== 0 ? Math.ceil(i / 2) : 0,
+    bought: false
+  });
+}
+
+// Достижения
+let achData = [
+  { id: 'first', name: '👆 Первый клик', check: () => total >= 1 },
+  { id: 'hundred', name: '🔥 100 кликов', check: () => total >= 100 },
+  { id: 'thousand', name: '⚔️ 1000 кликов', check: () => total >= 1000 },
+  { id: 'tenk', name: '💀 10000 кликов', check: () => total >= 10000 },
+  { id: 'million', name: '🌟 Миллионер', check: () => score >= 1000000 },
+  { id: 'buy1', name: '🛒 Первая покупка', check: () => buyCount >= 1 },
+  { id: 'buy10', name: '🏪 Торговец', check: () => buyCount >= 10 },
+  { id: 'buy50', name: '👑 Император магазина', check: () => buyCount >= 50 },
+  { id: 'lvl5', name: '⭐ Уровень 5', check: () => lvl >= 5 },
+  { id: 'lvl10', name: '🌟 Уровень 10', check: () => lvl >= 10 },
+  { id: 'lvl50', name: '🚀 Уровень 50', check: () => lvl >= 50 },
+  { id: 'lvl100', name: '🌌 Уровень 100', check: () => lvl >= 100 },
+  { id: 'lvl500', name: '💫 Бессмертный', check: () => lvl >= 500 },
+  { id: 'auto10', name: '🤖 Автоматизация', check: () => auto >= 10 },
+  { id: 'auto100', name: '🤖 Армия роботов', check: () => auto >= 100 },
+  { id: 'power100', name: '⚡ Сила 100', check: () => power >= 100 },
+  { id: 'power1000', name: '🔥 Сила 1000', check: () => power >= 1000 },
+  { id: 'collector', name: '🎒 Коллекционер', check: () => upgrades.every(x => x.bought) },
+  { id: 'legend', name: '🏆 Легенда', check: () => total >= 1000000 },
+  { id: 'super', name: '🔥 Super Clicker', check: () => lvl >= 1000 }
+];
+
+// ================================================================
+// 4. ОСНОВНЫЕ ИГРОВЫЕ ФУНКЦИИ
+// ================================================================
+function clicker() {
+  score += power;
+  total += power;
+  addXP(power);
+  checkAchievements();
+  update();
+  saveToServer();
+}
+
+function addXP(amount) {
+  xp += amount;
+  while (xp >= nextXP) {
+    xp -= nextXP;
+    lvl++;
+    nextXP *= 2;
+    notify('🎉 Новый уровень: ' + lvl);
+    checkAchievements();
+  }
+}
+
+function buy(i) {
+  let u = upgrades[i];
+  if (score >= u.cost && !u.bought) {
+    score -= u.cost;
+    u.bought = true;
+    power += u.power;
+    auto += u.auto;
+    buyCount++;
+    notify('🛒 Куплено: ' + u.name);
+    buySound.currentTime = 0;
+    buySound.play();
+    checkAchievements();
+    renderShop();
+    update();
+    saveToServer();
+  } else {
+    notify('❌ Недостаточно очков');
+    errorSound.currentTime = 0;
+    errorSound.play();
+  }
+}
+
+// ================================================================
+// 5. ДОСТИЖЕНИЯ
+// ================================================================
+function checkAchievements() {
+  achData.forEach(a => {
+    if (a.check() && !achievements.includes(a.id)) {
+      achievements.push(a.id);
+      notify('🏆 Получено: ' + a.name);
+      notificationSound.currentTime = 0;
+      notificationSound.play();
+    }
+  });
+  updateAchievements();
+}
+
+function updateAchievements() {
+  let box = document.getElementById('achlist');
+  if (!box) return;
+  let html = '';
+  achData.forEach(a => {
+    html += achievements.includes(a.id) 
+      ? '✅ ' + a.name + '<br>' 
+      : '🔒 ???<br>';
+  });
+  box.innerHTML = html;
+  document.getElementById('achCount').innerText = achievements.length;
+}
+
+// ================================================================
+// 6. УВЕДОМЛЕНИЯ
+// ================================================================
+function notify(text) {
+  let n = document.getElementById('notify');
+  n.innerText = text;
+  n.style.display = 'block';
+  setTimeout(() => { n.style.display = 'none'; }, 2500);
+}
+
+// ================================================================
+// 7. ОБНОВЛЕНИЕ UI
+// ================================================================
+function update() {
+  document.getElementById('score').innerText = score;
+  document.getElementById('power').innerText = power;
+  document.getElementById('auto').innerText = auto;
+  document.getElementById('lvl').innerText = lvl;
+  document.getElementById('total').innerText = total;
+  document.getElementById('buyc').innerText = buyCount;
+  document.getElementById('xp').innerText = xp;
+  document.getElementById('nextXP').innerText = nextXP;
+  document.getElementById('xpbar').style.width = Math.min((xp / nextXP) * 100, 100) + '%';
+  if (currentUser) {
+    document.getElementById('playerNameDisplay').innerText = currentUser.username;
+  }
+}
+
+// ================================================================
+// 8. МАГАЗИН
+// ================================================================
+function renderShop() {
+  let shop = document.getElementById('shopList');
+  shop.innerHTML = '';
+  upgrades.forEach((u, i) => {
+    let div = document.createElement('div');
+    div.className = 'shopItem';
+    if (u.bought) {
+      div.innerHTML = `
+        <b>${u.name}</b><br>
+        ✅ Куплено<br>
+        ⚔️ +${u.power}<br>
+        🤖 +${u.auto}
+      `;
+    } else {
+      div.innerHTML = `
+        <b>${u.name}</b><br>
+        💰 Цена: ${u.cost}<br>
+        ⚔️ +${u.power}<br>
+        🤖 +${u.auto}<br><br>
+        <button onclick="buy(${i})">Купить</button>
+      `;
+    }
+    shop.appendChild(div);
+  });
+}
+
+// ================================================================
+// 9. НАВИГАЦИЯ
+// ================================================================
+function show(id) {
+  document.querySelectorAll('.screen').forEach(x => x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'leaderboard') loadLeaderboard();
+}
+
+// ================================================================
+// 10. АВТОКЛИКЕР
+// ================================================================
+setInterval(() => {
+  if (auto > 0 && currentUser) {
+    score += auto;
+    total += auto;
+    addXP(auto);
+    checkAchievements();
+    update();
+    saveToServer();
+  }
+}, 1000);
+
+// ================================================================
+// 11. АВТОРИЗАЦИЯ
+// ================================================================
+function showRegister() {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'block';
+  document.getElementById('authStatus').innerText = '';
+}
+
+function showLogin() {
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('authStatus').innerText = '';
+}
+
+async function registerUser() {
+  const username = document.getElementById('regUsername').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const status = document.getElementById('authStatus');
+  
+  if (username.length < 3) {
+    status.innerText = '❌ Логин должен быть минимум 3 символа';
+    return;
+  }
+  if (password.length < 4) {
+    status.innerText = '❌ Пароль должен быть минимум 4 символа';
+    return;
+  }
+  
+  status.innerText = '⏳ Регистрация...';
+  
+  try {
+    const response = await fetch(`${API_URL}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await response.json();
+    if (data.success) {
+      status.innerText = '✅ Регистрация успешна! Теперь войдите.';
+      status.style.color = '#4ade80';
+      setTimeout(showLogin, 1500);
+    } else {
+      status.innerText = '❌ ' + data.error;
+      status.style.color = '#f87171';
+    }
+  } catch (e) {
+    status.innerText = '❌ Ошибка сервера. Проверьте интернет.';
+    status.style.color = '#f87171';
+  }
+}
+
+async function loginUser() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const status = document.getElementById('authStatus');
+  
+  if (!username || !password) {
+    status.innerText = '❌ Введите логин и пароль';
+    return;
+  }
+  
+  status.innerText = '⏳ Вход...';
+  
+  try {
+    const response = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await response.json();
+    
+    if (data.success) {
+      currentUser = data;
+      status.innerText = '✅ Добро пожаловать, ' + username + '!';
+      status.style.color = '#4ade80';
+      
+      // Загружаем данные
+      score = data.score || 0;
+      power = data.power || 1;
+      auto = data.auto || 0;
+      lvl = data.level || 1;
+      total = data.total || 0;
+      
+      update();
+      
+      // Показываем игру
+      document.getElementById('authScreen').classList.remove('active');
+      document.getElementById('mainNav').style.display = 'flex';
+      show('game');
+      
+      // Загружаем локальные достижения (если есть)
+      if (data.achievements) {
+        achievements = data.achievements;
+        updateAchievements();
+      }
+      
+      // Автосохранение каждые 10 секунд
+      if (window._saveInterval) clearInterval(window._saveInterval);
+      window._saveInterval = setInterval(saveToServer, 10000);
+      
+      // Загружаем таблицу лидеров
+      loadLeaderboard();
+      
+    } else {
+      status.innerText = '❌ ' + data.error;
+      status.style.color = '#f87171';
+    }
+  } catch (e) {
+    status.innerText = '❌ Ошибка сервера. Проверьте интернет.';
+    status.style.color = '#f87171';
+  }
+}
+
+function logout() {
+  if (window._saveInterval) {
+    clearInterval(window._saveInterval);
+    window._saveInterval = null;
+  }
+  currentUser = null;
+  document.getElementById('mainNav').style.display = 'none';
+  document.getElementById('authScreen').classList.add('active');
+  showLogin();
+  document.getElementById('authStatus').innerText = '👋 До свидания!';
+  document.getElementById('authStatus').style.color = '#fbbf24';
+}
+
+// ================================================================
+// 12. РАБОТА С СЕРВЕРОМ
+// ================================================================
+async function saveToServer() {
+  if (!currentUser) return;
+  try {
+    await fetch(`${API_URL}/save-score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: currentUser.user_id,
+        username: currentUser.username,
+        score: score,
+        level: lvl,
+        power: power,
+        auto: auto,
+        total: total,
+        achievements: achievements,
+        upgrades: upgrades
+      })
+    });
+  } catch (e) {
+    // Тихо сохраняем в локальное хранилище как резерв
+    localStorage.setItem('clicker_backup_' + currentUser?.username, JSON.stringify({
+      score, power, auto, total, lvl, xp, nextXP, buyCount, achievements, upgrades
+    }));
+  }
+}
+
+async function loadLeaderboard() {
+  const list = document.getElementById('leaderboardList');
+  if (!list) return;
+  list.innerHTML = '⏳ Загрузка...';
+  
+  try {
+    const response = await fetch(`${API_URL}/leaderboard`);
+    const data = await response.json();
+    
+    if (!data || data.length === 0) {
+      list.innerHTML = '🏆 Пока нет рекордов. Будь первым!';
+      return;
+    }
+    
+    let html = '';
+    data.forEach((item, index) => {
+      const isMe = currentUser && item.username === currentUser.username;
+      const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index+1}.`;
+      html += `
+        <div class="leaderboard-item ${isMe ? 'me' : ''}">
+          <span class="leaderboard-rank">${medal}</span>
+          <span class="leaderboard-name">${item.username} ${isMe ? '⭐' : ''}</span>
+          <span>
+            <span class="leaderboard-score">${item.score.toLocaleString()}</span>
+            <span class="leaderboard-level">lv.${item.level}</span>
+          </span>
+        </div>
+      `;
+    });
+    list.innerHTML = html;
+  } catch (e) {
+    list.innerHTML = '❌ Не удалось загрузить таблицу. Проверьте интернет.';
+  }
+}
+
+// Автообновление таблицы каждую минуту
+setInterval(() => {
+  if (document.getElementById('leaderboard').classList.contains('active')) {
+    loadLeaderboard();
+  }
+}, 60000);
+
+// ================================================================
+// 13. ЗАГРУЗКА ЛОКАЛЬНЫХ ДАННЫХ (РЕЗЕРВ)
+// ================================================================
+function loadLocalBackup(username) {
+  try {
+    const data = JSON.parse(localStorage.getItem('clicker_backup_' + username));
+    if (data) {
+      score = data.score || 0;
+      power = data.power || 1;
+      auto = data.auto || 0;
+      total = data.total || 0;
+      lvl = data.lvl || 1;
+      xp = data.xp || 0;
+      nextXP = data.nextXP || 1000;
+      buyCount = data.buyCount || 0;
+      achievements = data.achievements || [];
+      upgrades = data.upgrades || upgrades;
+      update();
+      updateAchievements();
+    }
+  } catch (e) {}
+}
+
+// ================================================================
+// 14. ЗАПУСК
+// ================================================================
+// Скрываем навигацию до входа
+document.getElementById('mainNav').style.display = 'none';
+
+// Показываем экран авторизации
+document.getElementById('authScreen').classList.add('active');
+
+// Инициализация
+renderShop();
+update();
+updateAchievements();
+
+console.log('🔥 Super Clicker Online загружен!');
+console.log('📍 API_URL:', API_URL);
+console.log('💡 Не забудь изменить API_URL на свой сервер!');
+</script>
+
+</body>
+</html>
