@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcrypt');
+const path = require('path');  // ← ДОБАВЛЯЕМ
 
 const app = express();
 app.use(cors());
@@ -12,6 +13,14 @@ const supabase = createClient(
   'https://zfbyfhpqxxosefgwlavb.supabase.co',  // 🔥 Project URL
   'sb_publishable_zhiAays5ACdVyJwPJByKjA_E5J281q_'    // 🔥 anon ключ
 );
+
+// ============ ОТДАЁМ HTML-ФАЙЛ ============
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Раздаём статические файлы (аудио, картинки и т.д.)
+app.use(express.static(__dirname));
 
 // ============ РЕГИСТРАЦИЯ ============
 app.post('/register', async (req, res) => {
