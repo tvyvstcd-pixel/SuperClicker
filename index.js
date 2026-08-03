@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
 });
 app.use(express.static(__dirname));
 
-// ============ РЕГИСТРАЦИЯ (МАКСИМУМ 3 АККАУНТА) ============
+// ============ РЕГИСТРАЦИЯ (МАКСИМУМ 2 АККАУНТА) ============
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
   
@@ -36,8 +36,8 @@ app.post('/register', async (req, res) => {
       
     if (countError) throw countError;
     
-    if (count >= 3) {
-      return res.status(400).json({ error: '❌ Достигнут лимит аккаунтов (максимум 3)' });
+    if (count >= 2) {
+      return res.status(400).json({ error: '❌ Достигнут лимит аккаунтов (максимум 2)' });
     }
     
     const { data: existing } = await supabase
@@ -66,9 +66,6 @@ app.post('/register', async (req, res) => {
       power: 1,
       auto: 0,
       total: 0,
-      buyCount: 0,
-      xp: 0,
-      nextXP: 1000,
       achievements: [],
       upgrades: [],
       admin_note: ''
@@ -124,11 +121,9 @@ app.post('/login', async (req, res) => {
       power: score?.power || 1,
       auto: score?.auto || 0,
       total: score?.total || 0,
-      buyCount: score?.buyCount || 0,
-      xp: score?.xp || 0,
-      nextXP: score?.nextXP || 1000,
       achievements: score?.achievements || [],
-      upgrades: score?.upgrades || []
+      upgrades: score?.upgrades || [],
+      admin_note: score?.admin_note || ''
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -137,7 +132,7 @@ app.post('/login', async (req, res) => {
 
 // ============ СОХРАНИТЬ РЕКОРД ============
 app.post('/save-score', async (req, res) => {
-  const { user_id, score, level, power, auto, total, buyCount, xp, nextXP, achievements, upgrades } = req.body;
+  const { user_id, score, level, power, auto, total, achievements, upgrades } = req.body;
   
   if (!user_id) {
     return res.status(400).json({ error: 'Не передан user_id' });
@@ -152,9 +147,6 @@ app.post('/save-score', async (req, res) => {
         power, 
         auto,
         total,
-        buyCount: buyCount || 0,
-        xp: xp || 0,
-        nextXP: nextXP || 1000,
         achievements: achievements || [],
         upgrades: upgrades || [],
         updated_at: new Date()
@@ -171,6 +163,7 @@ app.post('/save-score', async (req, res) => {
 // ============ ПОЛУЧИТЬ ТАБЛИЦУ ЛИДЕРОВ ============
 app.get('/leaderboard', async (req, res) => {
   try {
+    // Получаем только НЕЗАБАНЕННЫХ пользователей
     const { data } = await supabase
       .from('scores')
       .select(`
@@ -183,7 +176,7 @@ app.get('/leaderboard', async (req, res) => {
       .limit(20);
       
     const formatted = data
-      .filter(item => !item.users.is_banned)
+      .filter(item => !item.users.is_banned) // Скрываем забаненных
       .map(item => ({
         user_id: item.users.id,
         username: item.users.username,
@@ -199,15 +192,14 @@ app.get('/leaderboard', async (req, res) => {
   }
 });
 
-// ================================================================
-// АДМИН-ФУНКЦИИ
-// ================================================================
+// ============ АДМИН-ФУНКЦИИ ============
 
 // 1. Добавить очки игроку
 app.post('/admin/add-score', async (req, res) => {
   const { admin_id, username, amount } = req.body;
   
   try {
+    // Проверяем, что админ
     const { data: admin } = await supabase
       .from('users')
       .select('is_admin')
@@ -218,6 +210,7 @@ app.post('/admin/add-score', async (req, res) => {
       return res.status(403).json({ error: 'Недостаточно прав' });
     }
     
+    // Находим игрока
     const { data: user } = await supabase
       .from('users')
       .select('id')
@@ -228,6 +221,7 @@ app.post('/admin/add-score', async (req, res) => {
       return res.status(404).json({ error: 'Игрок не найден' });
     }
     
+    // Обновляем очки
     const { data: score } = await supabase
       .from('scores')
       .select('score')
@@ -252,6 +246,7 @@ app.post('/admin/ban', async (req, res) => {
   const { admin_id, username, reason } = req.body;
   
   try {
+    // Проверяем админа
     const { data: admin } = await supabase
       .from('users')
       .select('is_admin')
@@ -262,6 +257,7 @@ app.post('/admin/ban', async (req, res) => {
       return res.status(403).json({ error: 'Недостаточно прав' });
     }
     
+    // Нельзя забанить админа
     const { data: user } = await supabase
       .from('users')
       .select('id, is_admin')
@@ -276,6 +272,7 @@ app.post('/admin/ban', async (req, res) => {
       return res.status(403).json({ error: 'Нельзя забанить администратора' });
     }
     
+    // Баним
     await supabase
       .from('users')
       .update({ 
@@ -363,7 +360,7 @@ app.post('/admin/unlock-achievement', async (req, res) => {
   }
 });
 
-// 5. Приписка в таблице лидеров
+// 5. Добавить приписку в таблице лидеров
 app.post('/admin/set-note', async (req, res) => {
   const { admin_id, username, note } = req.body;
   
@@ -431,126 +428,7 @@ app.get('/admin/users', async (req, res) => {
   }
 });
 
-// ================================================================
-// 7. ГЛОБАЛЬНОЕ СООБЩЕНИЕ
-// ================================================================
-
-// Создаём таблицу для глобальных сообщений, если её нет
-async function initGlobalMessage() {
-  try {
-    // Проверяем, есть ли таблица
-    const { error } = await supabase
-      .from('global_messages')
-      .select('id')
-      .limit(1);
-      
-    if (error) {
-      // Таблицы нет, создаём
-      await supabase
-        .from('global_messages')
-        .insert({ message: '', admin_id: null });
-    }
-  } catch (e) {}
-}
-
-// Отправить глобальное сообщение
-app.post('/admin/global-msg', async (req, res) => {
-  const { admin_id, message } = req.body;
-  
-  try {
-    const { data: admin } = await supabase
-      .from('users')
-      .select('is_admin')
-      .eq('id', admin_id)
-      .single();
-      
-    if (!admin || !admin.is_admin) {
-      return res.status(403).json({ error: 'Недостаточно прав' });
-    }
-    
-    // Проверяем, есть ли уже запись
-    const { data: existing } = await supabase
-      .from('global_messages')
-      .select('id')
-      .limit(1);
-      
-    if (existing && existing.length > 0) {
-      // Обновляем
-      await supabase
-        .from('global_messages')
-        .update({ 
-          message: message,
-          admin_id: admin_id,
-          updated_at: new Date()
-        })
-        .eq('id', existing[0].id);
-    } else {
-      // Создаём новую
-      await supabase
-        .from('global_messages')
-        .insert({ 
-          message: message,
-          admin_id: admin_id,
-          updated_at: new Date()
-        });
-    }
-      
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Получить глобальное сообщение
-app.get('/global-msg', async (req, res) => {
-  try {
-    const { data } = await supabase
-      .from('global_messages')
-      .select('message')
-      .limit(1);
-      
-    if (data && data.length > 0 && data[0].message) {
-      res.json({ message: data[0].message });
-    } else {
-      res.json({ message: null });
-    }
-  } catch (error) {
-    res.json({ message: null });
-  }
-});
-
-// Убрать глобальное сообщение
-app.delete('/admin/global-msg', async (req, res) => {
-  const { admin_id } = req.body;
-  
-  try {
-    const { data: admin } = await supabase
-      .from('users')
-      .select('is_admin')
-      .eq('id', admin_id)
-      .single();
-      
-    if (!admin || !admin.is_admin) {
-      return res.status(403).json({ error: 'Недостаточно прав' });
-    }
-    
-    await supabase
-      .from('global_messages')
-      .update({ message: '' })
-      .neq('id', '');
-      
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ================================================================
-// ЗАПУСК
-// ================================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
-  // Инициализируем глобальные сообщения
-  initGlobalMessage();
 });
