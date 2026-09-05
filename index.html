@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🔥 Super Clicker Online</title>
 
+<!-- Подключаем Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 * {
   box-sizing: border-box;
@@ -525,12 +528,6 @@ nav button#logoutBtn:hover {
   100% { transform: scale(1) rotate(0); }
 }
 
-.egg-content img {
-  max-width: 200px;
-  border-radius: 20px;
-  margin-bottom: 15px;
-}
-
 .egg-content h2 {
   color: #fbbf24;
   font-size: 28px;
@@ -656,7 +653,6 @@ nav button#logoutBtn:hover {
   nav button { font-size: 10px; padding: 5px 6px; }
   .shopItem { font-size: 11px; padding: 6px 8px; }
   .egg-content { padding: 20px; margin: 15px; }
-  .egg-content img { max-width: 150px; }
   .pvp-player .score { font-size: 24px; }
   .pvp-center .timer { font-size: 24px; }
   .pvp-click-btn { height: 60px; font-size: 22px; }
@@ -668,22 +664,13 @@ nav button#logoutBtn:hover {
 <!-- ===== ПАСХАЛКА ===== -->
 <div id="eggOverlay" class="egg-overlay">
   <div class="egg-content">
-    <img id="eggImage" src="IMG_20260803_011509.jpg" alt="Поздравляю!">
     <h2>🥚 СЕКРЕТ НАЙДЕН!</h2>
     <p id="eggText">Андрей, ты особенный игрок! 👑</p>
     <button class="egg-btn" onclick="closeEgg()">🔥 Понял!</button>
   </div>
 </div>
 
-<audio id="eggSound" src="option-21.mp3"></audio>
-
 <div id="notify"></div>
-
-<audio id="bgMusic" src="Fonovaya.mp3" loop></audio>
-<audio id="clickSound" src="Click.wav"></audio>
-<audio id="buySound" src="BuySound.mp3"></audio>
-<audio id="errorSound" src="error.mp3"></audio>
-<audio id="notificationSound" src="notification.mp3"></audio>
 
 <!-- ===== ГЛОБАЛЬНОЕ СООБЩЕНИЕ ===== -->
 <div id="adminGlobalMsg" class="admin-global-msg"></div>
@@ -733,7 +720,7 @@ nav button#logoutBtn:hover {
     <div>🤖 Авто<br><b id="auto">0</b></div>
     <div>⭐ Уровень<br><b id="lvl">1</b></div>
   </div>
-  <button class="bigbtn" onclick="clicker(); playClick();">КЛИК</button>
+  <button class="bigbtn" onclick="clicker()">КЛИК</button>
   <div class="card">
     <h3 style="font-size:16px;">Опыт</h3>
     <div class="progress"><span id="xpbar"></span></div>
@@ -877,38 +864,15 @@ nav button#logoutBtn:hover {
 
 <script>
 // ================================================================
-// 1. НАСТРОЙКИ
+// 1. НАСТРОЙКИ SUPABASE
 // ================================================================
-const API_URL = 'https://superclicker.onrender.com';
+const SUPABASE_URL = 'https://bwmepmfuabysihljmxhw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3bWVwbWZ1YWJ5c2lobGpteGh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTcwNDQsImV4cCI6MjEwNDE3MzA0NH0.yR6Ioa5c0Lk2yY9vCK7waIizihFUtTh8U-Q88P-AF7k';
 
-// ================================================================
-// 2. ЗВУКИ
-// ================================================================
-const bgMusic = document.getElementById('bgMusic');
-const clickSound = document.getElementById('clickSound');
-const buySound = document.getElementById('buySound');
-const errorSound = document.getElementById('errorSound');
-const notificationSound = document.getElementById('notificationSound');
-const eggSound = document.getElementById('eggSound');
-
-bgMusic.volume = 0.08;
-clickSound.volume = 0.25;
-buySound.volume = 0.25;
-errorSound.volume = 0.2;
-notificationSound.volume = 0.3;
-if (eggSound) eggSound.volume = 0.5;
-
-document.addEventListener('click', () => {
-  if (bgMusic.paused) bgMusic.play();
-}, { once: true });
-
-function playClick() {
-  clickSound.currentTime = 0;
-  clickSound.play();
-}
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ================================================================
-// 3. ИГРОВЫЕ ПЕРЕМЕННЫЕ
+// 2. ИГРОВЫЕ ПЕРЕМЕННЫЕ
 // ================================================================
 let score = 0;
 let power = 1;
@@ -1024,7 +988,7 @@ let achData = [
 ];
 
 // ================================================================
-// 4. ОСНОВНЫЕ ФУНКЦИИ
+// 3. ОСНОВНЫЕ ФУНКЦИИ
 // ================================================================
 function clicker() {
   score += power;
@@ -1052,8 +1016,6 @@ function buy(index) {
   
   if (score < u.cost) {
     notify('❌ Нужно: ' + u.cost.toLocaleString(), 'error');
-    errorSound.currentTime = 0;
-    errorSound.play();
     return;
   }
   
@@ -1064,9 +1026,6 @@ function buy(index) {
   buyCount++;
   
   notify('🛒 Куплено: ' + u.name);
-  buySound.currentTime = 0;
-  buySound.play();
-  
   checkAchievements();
   renderShop();
   update();
@@ -1074,7 +1033,7 @@ function buy(index) {
 }
 
 // ================================================================
-// 5. ДОСТИЖЕНИЯ
+// 4. ДОСТИЖЕНИЯ
 // ================================================================
 function checkAchievements() {
   let newAchievements = [];
@@ -1083,8 +1042,6 @@ function checkAchievements() {
       achievements.push(a.id);
       newAchievements.push(a.id);
       notify('🏆 Достижение #' + a.id + ': ' + a.name);
-      notificationSound.currentTime = 0;
-      notificationSound.play();
     }
   });
   if (newAchievements.length > 0) {
@@ -1115,7 +1072,7 @@ function updateAchievements() {
 }
 
 // ================================================================
-// 6. УВЕДОМЛЕНИЯ
+// 5. УВЕДОМЛЕНИЯ
 // ================================================================
 function notify(text, type = '') {
   let n = document.getElementById('notify');
@@ -1127,7 +1084,7 @@ function notify(text, type = '') {
 }
 
 // ================================================================
-// 7. ОБНОВЛЕНИЕ UI
+// 6. ОБНОВЛЕНИЕ UI
 // ================================================================
 function update() {
   document.getElementById('score').innerText = Math.floor(score).toLocaleString();
@@ -1151,7 +1108,7 @@ function update() {
 }
 
 // ================================================================
-// 8. МАГАЗИН
+// 7. МАГАЗИН
 // ================================================================
 function renderShop() {
   let shop = document.getElementById('shopList');
@@ -1201,7 +1158,7 @@ function renderShop() {
 }
 
 // ================================================================
-// 9. НАВИГАЦИЯ
+// 8. НАВИГАЦИЯ
 // ================================================================
 function show(id) {
   document.querySelectorAll('.screen').forEach(x => x.classList.remove('active'));
@@ -1212,7 +1169,7 @@ function show(id) {
 }
 
 // ================================================================
-// 10. АВТОКЛИКЕР
+// 9. АВТОКЛИКЕР
 // ================================================================
 setInterval(() => {
   if (auto > 0 && currentUser) {
@@ -1226,7 +1183,7 @@ setInterval(() => {
 }, 1000);
 
 // ================================================================
-// 11. АВТОРИЗАЦИЯ
+// 10. АВТОРИЗАЦИЯ (SUPABASE)
 // ================================================================
 function showRegister() {
   document.getElementById('loginForm').style.display = 'none';
@@ -1257,22 +1214,61 @@ async function registerUser() {
   status.innerText = '⏳ Регистрация...';
   
   try {
-    const response = await fetch(`${API_URL}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+    // Регистрация через Supabase Auth (email = логин + @clicker.local)
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: username + '@clicker.local',
+      password: password,
+      options: {
+        data: { username: username }
+      }
     });
-    const data = await response.json();
-    if (data.success) {
-      status.innerText = '✅ Регистрация успешна! Войдите.';
-      status.style.color = '#4ade80';
-      setTimeout(showLogin, 1500);
-    } else {
-      status.innerText = '❌ ' + data.error;
-      status.style.color = '#f87171';
-    }
+    
+    if (authError) throw authError;
+    if (!authData.user) throw new Error('Ошибка создания пользователя');
+    
+    // Создаем запись в таблице users
+    const { error: userError } = await supabase
+      .from('users')
+      .insert([{ 
+        id: authData.user.id,
+        username: username,
+        is_admin: false,
+        is_banned: false
+      }]);
+    
+    if (userError) throw userError;
+    
+    // Создаем запись в player_stats
+    await supabase
+      .from('player_stats')
+      .insert([{ 
+        user_id: authData.user.id, 
+        score: 0, 
+        level: 1,
+        power: 1,
+        auto: 0,
+        total: 0,
+        buy_count: 0,
+        xp: 0,
+        next_xp: 1000
+      }]);
+    
+    // Создаем записи для улучшений
+    const upgradesData = upgrades.map((u, index) => ({
+      user_id: authData.user.id,
+      upgrade_index: index,
+      bought: false
+    }));
+    await supabase
+      .from('player_upgrades')
+      .insert(upgradesData);
+    
+    status.innerText = '✅ Регистрация успешна! Войдите.';
+    status.style.color = '#4ade80';
+    setTimeout(showLogin, 1500);
+    
   } catch (e) {
-    status.innerText = '❌ Ошибка сервера';
+    status.innerText = '❌ ' + e.message;
     status.style.color = '#f87171';
   }
 }
@@ -1293,11 +1289,6 @@ function showEgg() {
     🎉 Андрей, ты нашёл секретный доступ!<br>
     Ты получаешь +1000 очков и звание "Избранный"! 👑
   `;
-  
-  if (eggSound) {
-    eggSound.currentTime = 0;
-    eggSound.play().catch(() => {});
-  }
   
   setTimeout(() => {
     score += 1000;
@@ -1321,6 +1312,7 @@ async function loginUser() {
   const remember = document.getElementById('rememberMe').checked;
   const status = document.getElementById('authStatus');
   
+  // Пасхалка
   if (usernameLower === 'андрей' || usernameLower === 'andrei' || usernameLower === 'andrey') {
     showEgg();
     document.getElementById('loginUsername').value = '';
@@ -1338,87 +1330,115 @@ async function loginUser() {
   status.innerText = '⏳ Вход...';
   
   try {
-    const response = await fetch(`${API_URL}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+    // Вход через Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: username + '@clicker.local',
+      password: password
     });
-    const data = await response.json();
     
-    if (data.error && data.error.includes('забанены')) {
-      status.innerText = '⛔ ' + data.error;
+    if (authError) throw authError;
+    if (!authData.user) throw new Error('Пользователь не найден');
+    
+    // Получаем данные пользователя
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single();
+    
+    if (userError) throw userError;
+    
+    // Проверка бана
+    if (userData.is_banned) {
+      status.innerText = '⛔ Вы забанены';
       status.style.color = '#f87171';
-      if (data.ban_reason) {
-        notify('⛔ Забанен: ' + data.ban_reason, 'error');
-      }
+      notify('⛔ Забанен: ' + (userData.ban_reason || 'Нарушение правил'), 'error');
       return;
     }
     
-    if (data.success) {
-      currentUser = data;
-      
-      score = data.score || 0;
-      power = data.power || 1;
-      auto = data.auto || 0;
-      lvl = data.level || 1;
-      total = data.total || 0;
-      buyCount = data.buyCount || 0;
-      xp = data.xp || 0;
-      nextXP = data.nextXP || 1000;
-      
-      if (data.achievements) {
-        achievements = data.achievements;
-      }
-      
-      if (data.upgrades && data.upgrades.length > 0) {
-        data.upgrades.forEach((saved, index) => {
-          if (index < upgrades.length && saved.bought) {
-            upgrades[index].bought = true;
-          }
-        });
-      }
-      
-      if (remember) {
-        localStorage.setItem('clicker_user', JSON.stringify({
-          username: username,
-          password: password,
-          user_id: data.user_id,
-          is_admin: data.is_admin || false
-        }));
-      } else {
-        localStorage.removeItem('clicker_user');
-      }
-      
-      status.innerText = '✅ Добро пожаловать!';
-      status.style.color = '#4ade80';
-      
-      update();
-      updateAchievements();
-      renderShop();
-      
-      document.getElementById('authScreen').classList.remove('active');
-      document.getElementById('mainNav').style.display = 'flex';
-      
-      if (currentUser.is_admin) {
-        document.getElementById('adminBtn').style.display = 'block';
-      }
-      
-      checkGlobalMessage();
-      
-      show('game');
-      
-      if (window._saveInterval) clearInterval(window._saveInterval);
-      window._saveInterval = setInterval(saveToServer, 10000);
-      
-      loadLeaderboard();
-      loadPvpLeaderboard();
-      
-    } else {
-      status.innerText = '❌ ' + data.error;
-      status.style.color = '#f87171';
+    // Загружаем статистику
+    const { data: statsData } = await supabase
+      .from('player_stats')
+      .select('*')
+      .eq('user_id', authData.user.id)
+      .single();
+    
+    // Загружаем достижения
+    const { data: achData } = await supabase
+      .from('player_achievements')
+      .select('achievement_id')
+      .eq('user_id', authData.user.id);
+    
+    // Загружаем улучшения
+    const { data: upgData } = await supabase
+      .from('player_upgrades')
+      .select('upgrade_index, bought')
+      .eq('user_id', authData.user.id);
+    
+    // Применяем данные
+    currentUser = {
+      user_id: authData.user.id,
+      username: userData.username,
+      is_admin: userData.is_admin,
+      is_banned: userData.is_banned,
+      ban_reason: userData.ban_reason
+    };
+    
+    score = statsData?.score || 0;
+    power = statsData?.power || 1;
+    auto = statsData?.auto || 0;
+    lvl = statsData?.level || 1;
+    total = statsData?.total || 0;
+    buyCount = statsData?.buy_count || 0;
+    xp = statsData?.xp || 0;
+    nextXP = statsData?.next_xp || 1000;
+    
+    achievements = achData?.map(a => a.achievement_id) || [];
+    
+    if (upgData) {
+      upgData.forEach(u => {
+        if (u.bought && u.upgrade_index < upgrades.length) {
+          upgrades[u.upgrade_index].bought = true;
+        }
+      });
     }
+    
+    // Запоминаем
+    if (remember) {
+      localStorage.setItem('clicker_user', JSON.stringify({
+        username: username,
+        password: password,
+        user_id: authData.user.id
+      }));
+    } else {
+      localStorage.removeItem('clicker_user');
+    }
+    
+    status.innerText = '✅ Добро пожаловать!';
+    status.style.color = '#4ade80';
+    
+    update();
+    updateAchievements();
+    renderShop();
+    
+    document.getElementById('authScreen').classList.remove('active');
+    document.getElementById('mainNav').style.display = 'flex';
+    
+    if (currentUser.is_admin) {
+      document.getElementById('adminBtn').style.display = 'block';
+    }
+    
+    checkGlobalMessage();
+    show('game');
+    
+    if (window._saveInterval) clearInterval(window._saveInterval);
+    window._saveInterval = setInterval(saveToServer, 10000);
+    
+    loadLeaderboard();
+    loadPvpLeaderboard();
+    
   } catch (e) {
-    status.innerText = '❌ Ошибка сервера';
+    status.innerText = '❌ ' + e.message;
     status.style.color = '#f87171';
   }
 }
@@ -1457,9 +1477,9 @@ function logout() {
 }
 
 // ================================================================
-// 12. АВТОВХОД
+// 11. АВТОВХОД
 // ================================================================
-function autoLogin() {
+async function autoLogin() {
   try {
     const savedData = localStorage.getItem('clicker_user');
     if (!savedData) return;
@@ -1467,100 +1487,151 @@ function autoLogin() {
     const user = JSON.parse(savedData);
     if (!user.username || !user.password) return;
     
-    fetch(`${API_URL}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        username: user.username, 
-        password: user.password 
-      })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success && !data.error) {
-        currentUser = data;
-        
-        score = data.score || 0;
-        power = data.power || 1;
-        auto = data.auto || 0;
-        lvl = data.level || 1;
-        total = data.total || 0;
-        buyCount = data.buyCount || 0;
-        xp = data.xp || 0;
-        nextXP = data.nextXP || 1000;
-        
-        if (data.achievements) {
-          achievements = data.achievements;
+    // Автоматический вход
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: user.username + '@clicker.local',
+      password: user.password
+    });
+    
+    if (authError) throw authError;
+    if (!authData.user) throw new Error('Пользователь не найден');
+    
+    // Получаем данные пользователя
+    const { data: userData } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single();
+    
+    if (!userData || userData.is_banned) return;
+    
+    // Загружаем статистику
+    const { data: statsData } = await supabase
+      .from('player_stats')
+      .select('*')
+      .eq('user_id', authData.user.id)
+      .single();
+    
+    const { data: achData } = await supabase
+      .from('player_achievements')
+      .select('achievement_id')
+      .eq('user_id', authData.user.id);
+    
+    const { data: upgData } = await supabase
+      .from('player_upgrades')
+      .select('upgrade_index, bought')
+      .eq('user_id', authData.user.id);
+    
+    currentUser = {
+      user_id: authData.user.id,
+      username: userData.username,
+      is_admin: userData.is_admin,
+      is_banned: userData.is_banned,
+      ban_reason: userData.ban_reason
+    };
+    
+    score = statsData?.score || 0;
+    power = statsData?.power || 1;
+    auto = statsData?.auto || 0;
+    lvl = statsData?.level || 1;
+    total = statsData?.total || 0;
+    buyCount = statsData?.buy_count || 0;
+    xp = statsData?.xp || 0;
+    nextXP = statsData?.next_xp || 1000;
+    
+    achievements = achData?.map(a => a.achievement_id) || [];
+    
+    if (upgData) {
+      upgData.forEach(u => {
+        if (u.bought && u.upgrade_index < upgrades.length) {
+          upgrades[u.upgrade_index].bought = true;
         }
-        
-        if (data.upgrades && data.upgrades.length > 0) {
-          data.upgrades.forEach((saved, index) => {
-            if (index < upgrades.length && saved.bought) {
-              upgrades[index].bought = true;
-            }
-          });
-        }
-        
-        update();
-        updateAchievements();
-        renderShop();
-        
-        document.getElementById('authScreen').classList.remove('active');
-        document.getElementById('mainNav').style.display = 'flex';
-        
-        if (currentUser.is_admin) {
-          document.getElementById('adminBtn').style.display = 'block';
-        }
-        
-        checkGlobalMessage();
-        
-        show('game');
-        
-        if (window._saveInterval) clearInterval(window._saveInterval);
-        window._saveInterval = setInterval(saveToServer, 10000);
-        
-        loadLeaderboard();
-        loadPvpLeaderboard();
-        
-        if (isInitialLoad) {
-          notify('🔓 Добро пожаловать, ' + user.username + '!');
-          isInitialLoad = false;
-        }
-      }
-    })
-    .catch(() => {});
-  } catch (e) {}
+      });
+    }
+    
+    update();
+    updateAchievements();
+    renderShop();
+    
+    document.getElementById('authScreen').classList.remove('active');
+    document.getElementById('mainNav').style.display = 'flex';
+    
+    if (currentUser.is_admin) {
+      document.getElementById('adminBtn').style.display = 'block';
+    }
+    
+    checkGlobalMessage();
+    show('game');
+    
+    if (window._saveInterval) clearInterval(window._saveInterval);
+    window._saveInterval = setInterval(saveToServer, 10000);
+    
+    loadLeaderboard();
+    loadPvpLeaderboard();
+    
+    if (isInitialLoad) {
+      notify('🔓 Добро пожаловать, ' + user.username + '!');
+      isInitialLoad = false;
+    }
+    
+  } catch (e) {
+    console.log('Auto login failed:', e.message);
+  }
 }
 
 // ================================================================
-// 13. СОХРАНЕНИЕ НА СЕРВЕР
+// 12. СОХРАНЕНИЕ НА СЕРВЕР (SUPABASE)
 // ================================================================
 async function saveToServer() {
   if (!currentUser) return;
+  
   try {
-    await fetch(`${API_URL}/save-score`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    // Обновляем статистику
+    await supabase
+      .from('player_stats')
+      .upsert({
         user_id: currentUser.user_id,
-        username: currentUser.username,
         score: Math.floor(score),
         level: lvl,
         power: power,
         auto: auto,
         total: Math.floor(total),
-        buyCount: buyCount,
+        buy_count: buyCount,
         xp: Math.floor(xp),
-        nextXP: Math.floor(nextXP),
-        achievements: achievements,
-        upgrades: upgrades.map(u => ({ bought: u.bought }))
-      })
-    });
-  } catch (e) {}
+        next_xp: Math.floor(nextXP),
+        updated_at: new Date()
+      }, { onConflict: 'user_id' });
+    
+    // Обновляем улучшения
+    for (let i = 0; i < upgrades.length; i++) {
+      if (upgrades[i].bought) {
+        await supabase
+          .from('player_upgrades')
+          .upsert({
+            user_id: currentUser.user_id,
+            upgrade_index: i,
+            bought: true
+          }, { onConflict: 'user_id, upgrade_index' });
+      }
+    }
+    
+    // Обновляем достижения
+    for (const achId of achievements) {
+      await supabase
+        .from('player_achievements')
+        .upsert({
+          user_id: currentUser.user_id,
+          achievement_id: achId
+        }, { onConflict: 'user_id, achievement_id' });
+    }
+    
+  } catch (e) {
+    console.error('Save error:', e);
+  }
 }
 
 // ================================================================
-// 14. ТАБЛИЦА ЛИДЕРОВ
+// 13. ТАБЛИЦА ЛИДЕРОВ
 // ================================================================
 async function loadLeaderboard() {
   const list = document.getElementById('leaderboardList');
@@ -1568,8 +1639,12 @@ async function loadLeaderboard() {
   list.innerHTML = '⏳ Загрузка...';
   
   try {
-    const response = await fetch(`${API_URL}/leaderboard`);
-    const data = await response.json();
+    const { data, error } = await supabase
+      .from('leaderboard')
+      .select('*')
+      .limit(50);
+    
+    if (error) throw error;
     
     if (!data || data.length === 0) {
       list.innerHTML = '🏆 Пока нет рекордов. Будь первым!';
@@ -1609,7 +1684,7 @@ setInterval(() => {
 }, 60000);
 
 // ================================================================
-// 15. PVP-ФУНКЦИИ
+// 14. PVP-ФУНКЦИИ (упрощенные для работы с Supabase)
 // ================================================================
 let pvpMatchId = null;
 let pvpPlayerId = null;
@@ -1632,20 +1707,44 @@ async function pvpFindOpponent() {
   cancelBtn.style.display = 'block';
   
   try {
-    const response = await fetch(`${API_URL}/pvp/find`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: currentUser.user_id })
-    });
-    const data = await response.json();
+    // Ищем активный матч или создаем новый
+    const { data: existingMatch, error: findError } = await supabase
+      .from('pvp_matches')
+      .select('*')
+      .eq('status', 'waiting')
+      .neq('player1_id', currentUser.user_id)
+      .limit(1);
     
-    if (data.status === 'match_found') {
-      status.innerText = '✅ Противник найден! Битва начинается!';
-      pvpMatchId = data.match_id;
+    if (existingMatch && existingMatch.length > 0) {
+      // Присоединяемся к существующему матчу
+      const match = existingMatch[0];
+      await supabase
+        .from('pvp_matches')
+        .update({
+          player2_id: currentUser.user_id,
+          status: 'active',
+          time_left: 30
+        })
+        .eq('id', match.id);
+      
+      pvpMatchId = match.id;
       pvpPlayerId = currentUser.user_id;
       
-      document.getElementById('pvpPlayer1Name').innerText = data.player1_name;
-      document.getElementById('pvpPlayer2Name').innerText = data.player2_name;
+      // Получаем имена игроков
+      const { data: player1Data } = await supabase
+        .from('users')
+        .select('username')
+        .eq('id', match.player1_id)
+        .single();
+      
+      const { data: player2Data } = await supabase
+        .from('users')
+        .select('username')
+        .eq('id', currentUser.user_id)
+        .single();
+      
+      document.getElementById('pvpPlayer1Name').innerText = player1Data?.username || 'Игрок 1';
+      document.getElementById('pvpPlayer2Name').innerText = player2Data?.username || 'Игрок 2';
       
       document.getElementById('pvpSearch').style.display = 'none';
       document.getElementById('pvpBattle').style.display = 'block';
@@ -1660,13 +1759,73 @@ async function pvpFindOpponent() {
       
       notify('⚔️ Битва началась! Кликай быстрее!');
       
-    } else if (data.status === 'waiting') {
+    } else {
+      // Создаем новый матч
+      const { data: newMatch, error: createError } = await supabase
+        .from('pvp_matches')
+        .insert({
+          player1_id: currentUser.user_id,
+          status: 'waiting',
+          time_left: 30
+        })
+        .select()
+        .single();
+      
+      if (createError) throw createError;
+      
+      pvpMatchId = newMatch.id;
+      pvpPlayerId = currentUser.user_id;
+      
       status.innerText = '⏳ Ожидание противника...';
-    } else if (data.status === 'already_in_queue') {
-      status.innerText = '⏳ Вы уже в очереди...';
+      
+      // Опрос статуса
+      if (pvpInterval) clearInterval(pvpInterval);
+      pvpInterval = setInterval(async () => {
+        try {
+          const { data: matchData } = await supabase
+            .from('pvp_matches')
+            .select('*')
+            .eq('id', pvpMatchId)
+            .single();
+          
+          if (matchData && matchData.status === 'active') {
+            clearInterval(pvpInterval);
+            pvpInterval = null;
+            
+            // Получаем имена игроков
+            const { data: player1Data } = await supabase
+              .from('users')
+              .select('username')
+              .eq('id', matchData.player1_id)
+              .single();
+            
+            const { data: player2Data } = await supabase
+              .from('users')
+              .select('username')
+              .eq('id', matchData.player2_id)
+              .single();
+            
+            document.getElementById('pvpPlayer1Name').innerText = player1Data?.username || 'Игрок 1';
+            document.getElementById('pvpPlayer2Name').innerText = player2Data?.username || 'Игрок 2';
+            
+            document.getElementById('pvpSearch').style.display = 'none';
+            document.getElementById('pvpBattle').style.display = 'block';
+            document.getElementById('pvpResult').style.display = 'none';
+            
+            document.getElementById('pvpPlayer1Score').innerText = '0';
+            document.getElementById('pvpPlayer2Score').innerText = '0';
+            document.getElementById('pvpTimer').innerText = '30';
+            
+            if (pvpInterval) clearInterval(pvpInterval);
+            pvpInterval = setInterval(pvpGetStatus, 1000);
+            
+            notify('⚔️ Противник найден! Битва началась!');
+          }
+        } catch (e) {}
+      }, 2000);
     }
   } catch (e) {
-    status.innerText = '❌ Ошибка поиска';
+    status.innerText = '❌ Ошибка: ' + e.message;
     btn.disabled = false;
     btn.style.opacity = '1';
     cancelBtn.style.display = 'none';
@@ -1675,12 +1834,22 @@ async function pvpFindOpponent() {
 
 async function pvpCancelSearch() {
   try {
-    await fetch(`${API_URL}/pvp/cancel`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: currentUser.user_id })
-    });
+    if (pvpMatchId) {
+      await supabase
+        .from('pvp_matches')
+        .delete()
+        .eq('id', pvpMatchId)
+        .eq('player1_id', currentUser.user_id);
+    }
   } catch (e) {}
+  
+  if (pvpInterval) {
+    clearInterval(pvpInterval);
+    pvpInterval = null;
+  }
+  
+  pvpMatchId = null;
+  pvpPlayerId = null;
   
   document.getElementById('pvpFindBtn').disabled = false;
   document.getElementById('pvpFindBtn').style.opacity = '1';
@@ -1692,30 +1861,39 @@ async function pvpGetStatus() {
   if (!pvpMatchId) return;
   
   try {
-    const response = await fetch(`${API_URL}/pvp/status/${pvpMatchId}?user_id=${currentUser.user_id}`);
-    const data = await response.json();
+    const { data: matchData, error } = await supabase
+      .from('pvp_matches')
+      .select('*')
+      .eq('id', pvpMatchId)
+      .single();
     
-    document.getElementById('pvpPlayer1Score').innerText = data.player1_score;
-    document.getElementById('pvpPlayer2Score').innerText = data.player2_score;
-    document.getElementById('pvpTimer').innerText = data.time_left;
+    if (error || !matchData) {
+      clearInterval(pvpInterval);
+      pvpInterval = null;
+      notify('❌ Ошибка матча', 'error');
+      return;
+    }
     
-    if (data.status === 'finished') {
+    document.getElementById('pvpPlayer1Score').innerText = matchData.player1_score || 0;
+    document.getElementById('pvpPlayer2Score').innerText = matchData.player2_score || 0;
+    document.getElementById('pvpTimer').innerText = matchData.time_left || 0;
+    
+    if (matchData.status === 'finished') {
       clearInterval(pvpInterval);
       pvpInterval = null;
       
       document.getElementById('pvpBattle').style.display = 'none';
       document.getElementById('pvpResult').style.display = 'block';
       
-      const isPlayer1 = pvpPlayerId === data.player1_id;
-      const myScore = isPlayer1 ? data.player1_score : data.player2_score;
-      const opponentScore = isPlayer1 ? data.player2_score : data.player1_score;
-      const winnerId = data.winner_id;
-      const isWinner = winnerId === pvpPlayerId;
+      const isPlayer1 = pvpPlayerId === matchData.player1_id;
+      const myScore = isPlayer1 ? matchData.player1_score : matchData.player2_score;
+      const opponentScore = isPlayer1 ? matchData.player2_score : matchData.player1_score;
+      const isWinner = matchData.winner_id === pvpPlayerId;
       
       document.getElementById('pvpResultTitle').innerText = isWinner ? '🏆 ПОБЕДА!' : '💔 ПОРАЖЕНИЕ!';
       document.getElementById('pvpResultTitle').style.color = isWinner ? '#4ade80' : '#f87171';
       
-      if (winnerId === null) {
+      if (matchData.winner_id === null) {
         document.getElementById('pvpResultTitle').innerText = '🤝 НИЧЬЯ!';
         document.getElementById('pvpResultTitle').style.color = '#fbbf24';
         document.getElementById('pvpResultText').innerHTML = `
@@ -1731,10 +1909,29 @@ async function pvpGetStatus() {
         `;
       }
       
+      // Обновляем PvP статистику
+      if (isWinner) {
+        await supabase
+          .from('pvp_stats')
+          .upsert({
+            user_id: pvpPlayerId,
+            wins: 1
+          }, { onConflict: 'user_id', count: 'exact' });
+      } else if (!isWinner && matchData.winner_id !== null) {
+        await supabase
+          .from('pvp_stats')
+          .upsert({
+            user_id: pvpPlayerId,
+            losses: 1
+          }, { onConflict: 'user_id', count: 'exact' });
+      }
+      
       loadPvpLeaderboard();
       document.getElementById('pvpClickBtn').disabled = true;
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('PvP status error:', e);
+  }
 }
 
 async function pvpClick() {
@@ -1743,15 +1940,32 @@ async function pvpClick() {
   pvpClickCooldown = true;
   
   try {
-    await fetch(`${API_URL}/pvp/click`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        match_id: pvpMatchId,
-        user_id: currentUser.user_id
-      })
-    });
-  } catch (e) {}
+    // Получаем текущий матч
+    const { data: matchData } = await supabase
+      .from('pvp_matches')
+      .select('*')
+      .eq('id', pvpMatchId)
+      .single();
+    
+    if (!matchData || matchData.status === 'finished') {
+      notify('❌ Битва уже закончилась', 'error');
+      pvpClickCooldown = false;
+      return;
+    }
+    
+    // Обновляем счет игрока
+    const isPlayer1 = pvpPlayerId === matchData.player1_id;
+    const field = isPlayer1 ? 'player1_score' : 'player2_score';
+    const currentScore = isPlayer1 ? matchData.player1_score : matchData.player2_score;
+    
+    await supabase
+      .from('pvp_matches')
+      .update({ [field]: (currentScore || 0) + 1 })
+      .eq('id', pvpMatchId);
+    
+  } catch (e) {
+    console.error('PvP click error:', e);
+  }
   
   setTimeout(() => { pvpClickCooldown = false; }, 100);
 }
@@ -1777,8 +1991,18 @@ async function loadPvpLeaderboard() {
   list.innerHTML = '⏳ Загрузка...';
   
   try {
-    const response = await fetch(`${API_URL}/pvp/leaderboard`);
-    const data = await response.json();
+    const { data, error } = await supabase
+      .from('pvp_stats')
+      .select(`
+        user_id,
+        wins,
+        losses,
+        users:user_id (username, is_admin)
+      `)
+      .order('wins', { ascending: false })
+      .limit(50);
+    
+    if (error) throw error;
     
     if (!data || data.length === 0) {
       list.innerHTML = '🏆 Пока нет рекордов. Будь первым!';
@@ -1787,15 +2011,17 @@ async function loadPvpLeaderboard() {
     
     let html = '';
     data.forEach((item, index) => {
-      const isMe = currentUser && item.username === currentUser.username;
+      const username = item.users?.username || 'Неизвестный';
+      const isAdmin = item.users?.is_admin || false;
+      const isMe = currentUser && item.user_id === currentUser.user_id;
       const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index+1}.`;
       const winRate = item.wins + item.losses > 0 ? Math.round((item.wins / (item.wins + item.losses)) * 100) : 0;
       html += `
         <div class="leaderboard-item ${isMe ? 'me' : ''}">
           <span class="leaderboard-rank">${medal}</span>
           <span class="leaderboard-name">
-            ${item.username} 
-            ${item.is_admin ? '👑' : ''}
+            ${username} 
+            ${isAdmin ? '👑' : ''}
             ${isMe ? '⭐' : ''}
           </span>
           <span style="text-align:right;">
@@ -1813,7 +2039,7 @@ async function loadPvpLeaderboard() {
 }
 
 // ================================================================
-// 16. АДМИН-ФУНКЦИИ
+// 15. АДМИН-ФУНКЦИИ (SUPABASE)
 // ================================================================
 async function loadAdminUsers() {
   const list = document.getElementById('adminUserList');
@@ -1821,8 +2047,19 @@ async function loadAdminUsers() {
   list.innerHTML = '⏳ Загрузка...';
   
   try {
-    const response = await fetch(`${API_URL}/admin/users?admin_id=${currentUser?.user_id}`);
-    const data = await response.json();
+    const { data, error } = await supabase
+      .from('users')
+      .select(`
+        id,
+        username,
+        is_admin,
+        is_banned,
+        ban_reason,
+        player_stats (score, level, admin_note)
+      `)
+      .order('username');
+    
+    if (error) throw error;
     
     if (!data || data.length === 0) {
       list.innerHTML = 'Нет пользователей';
@@ -1831,17 +2068,17 @@ async function loadAdminUsers() {
     
     let html = '';
     data.forEach(user => {
-      const scoreData = user.scores?.[0] || {};
+      const stats = user.player_stats?.[0] || {};
       const status = user.is_banned ? '⛔ Забанен' : '✅ Активен';
       const statusClass = user.is_banned ? 'banned' : 'active';
       const role = user.is_admin ? '👑 Админ' : '👤 Игрок';
       html += `
         <div class="admin-user-item">
           <div><span class="username">${user.username}</span> <span class="role">${role}</span></div>
-          <div>💰 ${scoreData.score || 0} | ⭐ ${scoreData.level || 1}</div>
+          <div>💰 ${stats.score || 0} | ⭐ ${stats.level || 1}</div>
           <div class="status ${statusClass}">${status}</div>
           ${user.ban_reason ? `<div style="font-size:11px;color:#fbbf24;">📌 ${user.ban_reason}</div>` : ''}
-          ${scoreData.admin_note ? `<div style="font-size:11px;color:#60a5fa;">📝 ${scoreData.admin_note}</div>` : ''}
+          ${stats.admin_note ? `<div style="font-size:11px;color:#60a5fa;">📝 ${stats.admin_note}</div>` : ''}
         </div>
       `;
     });
@@ -1861,25 +2098,38 @@ async function adminAddScore() {
   }
   
   try {
-    const response = await fetch(`${API_URL}/admin/add-score`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        admin_id: currentUser.user_id,
-        username: username,
-        amount: amount
-      })
-    });
-    const data = await response.json();
-    if (data.success) {
-      notify('✅ Добавлено ' + amount + ' очков игроку ' + username);
-      loadAdminUsers();
-      loadLeaderboard();
-    } else {
-      notify('❌ ' + data.error, 'error');
+    // Находим пользователя
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .single();
+    
+    if (!userData) {
+      notify('❌ Пользователь не найден', 'error');
+      return;
     }
+    
+    // Обновляем статистику
+    const { data: statsData } = await supabase
+      .from('player_stats')
+      .select('score')
+      .eq('user_id', userData.id)
+      .single();
+    
+    await supabase
+      .from('player_stats')
+      .upsert({
+        user_id: userData.id,
+        score: (statsData?.score || 0) + amount
+      }, { onConflict: 'user_id' });
+    
+    notify('✅ Добавлено ' + amount + ' очков игроку ' + username);
+    loadAdminUsers();
+    loadLeaderboard();
+    
   } catch (e) {
-    notify('❌ Ошибка сервера', 'error');
+    notify('❌ Ошибка: ' + e.message, 'error');
   }
 }
 
@@ -1893,24 +2143,16 @@ async function adminBan() {
   }
   
   try {
-    const response = await fetch(`${API_URL}/admin/ban`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        admin_id: currentUser.user_id,
-        username: username,
-        reason: reason
-      })
-    });
-    const data = await response.json();
-    if (data.success) {
-      notify('✅ Игрок ' + username + ' забанен');
-      loadAdminUsers();
-    } else {
-      notify('❌ ' + data.error, 'error');
-    }
+    await supabase
+      .from('users')
+      .update({ is_banned: true, ban_reason: reason })
+      .eq('username', username);
+    
+    notify('✅ Игрок ' + username + ' забанен');
+    loadAdminUsers();
+    
   } catch (e) {
-    notify('❌ Ошибка сервера', 'error');
+    notify('❌ Ошибка: ' + e.message, 'error');
   }
 }
 
@@ -1923,23 +2165,16 @@ async function adminUnban() {
   }
   
   try {
-    const response = await fetch(`${API_URL}/admin/unban`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        admin_id: currentUser.user_id,
-        username: username
-      })
-    });
-    const data = await response.json();
-    if (data.success) {
-      notify('✅ Игрок ' + username + ' разбанен');
-      loadAdminUsers();
-    } else {
-      notify('❌ ' + data.error, 'error');
-    }
+    await supabase
+      .from('users')
+      .update({ is_banned: false, ban_reason: null })
+      .eq('username', username);
+    
+    notify('✅ Игрок ' + username + ' разбанен');
+    loadAdminUsers();
+    
   } catch (e) {
-    notify('❌ Ошибка сервера', 'error');
+    notify('❌ Ошибка: ' + e.message, 'error');
   }
 }
 
@@ -1959,24 +2194,29 @@ async function adminUnlockAchievement() {
   }
   
   try {
-    const response = await fetch(`${API_URL}/admin/unlock-achievement`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        admin_id: currentUser.user_id,
-        username: username,
-        achievement_id: achievId
-      })
-    });
-    const data = await response.json();
-    if (data.success) {
-      notify('✅ Достижение #' + achievId + ' открыто для ' + username);
-      loadAdminUsers();
-    } else {
-      notify('❌ ' + data.error, 'error');
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .single();
+    
+    if (!userData) {
+      notify('❌ Пользователь не найден', 'error');
+      return;
     }
+    
+    await supabase
+      .from('player_achievements')
+      .insert({
+        user_id: userData.id,
+        achievement_id: achievId
+      });
+    
+    notify('✅ Достижение #' + achievId + ' открыто для ' + username);
+    loadAdminUsers();
+    
   } catch (e) {
-    notify('❌ Ошибка сервера', 'error');
+    notify('❌ Ошибка: ' + e.message, 'error');
   }
 }
 
@@ -1990,30 +2230,35 @@ async function adminSetNote() {
   }
   
   try {
-    const response = await fetch(`${API_URL}/admin/set-note`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        admin_id: currentUser.user_id,
-        username: username,
-        note: note || ''
-      })
-    });
-    const data = await response.json();
-    if (data.success) {
-      notify('✅ Приписка установлена для ' + username);
-      loadAdminUsers();
-      loadLeaderboard();
-    } else {
-      notify('❌ ' + data.error, 'error');
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username)
+      .single();
+    
+    if (!userData) {
+      notify('❌ Пользователь не найден', 'error');
+      return;
     }
+    
+    await supabase
+      .from('player_stats')
+      .upsert({
+        user_id: userData.id,
+        admin_note: note || ''
+      }, { onConflict: 'user_id' });
+    
+    notify('✅ Приписка установлена для ' + username);
+    loadAdminUsers();
+    loadLeaderboard();
+    
   } catch (e) {
-    notify('❌ Ошибка сервера', 'error');
+    notify('❌ Ошибка: ' + e.message, 'error');
   }
 }
 
 // ================================================================
-// 17. ГЛОБАЛЬНОЕ СООБЩЕНИЕ
+// 16. ГЛОБАЛЬНОЕ СООБЩЕНИЕ
 // ================================================================
 async function adminSendGlobalMsg() {
   const msg = document.getElementById('adminGlobalMsgInput').value.trim();
@@ -2024,55 +2269,53 @@ async function adminSendGlobalMsg() {
   }
   
   try {
-    const response = await fetch(`${API_URL}/admin/global-msg`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        admin_id: currentUser.user_id,
-        message: msg
-      })
-    });
-    const data = await response.json();
-    if (data.success) {
-      notify('✅ Сообщение отправлено всем!');
-      document.getElementById('adminGlobalMsgInput').value = '';
-      checkGlobalMessage();
-    } else {
-      notify('❌ ' + data.error, 'error');
-    }
+    // Очищаем старые сообщения
+    await supabase
+      .from('global_messages')
+      .delete()
+      .neq('id', '');
+    
+    await supabase
+      .from('global_messages')
+      .insert({ message: msg });
+    
+    notify('✅ Сообщение отправлено всем!');
+    document.getElementById('adminGlobalMsgInput').value = '';
+    checkGlobalMessage();
+    
   } catch (e) {
-    notify('❌ Ошибка сервера', 'error');
+    notify('❌ Ошибка: ' + e.message, 'error');
   }
 }
 
 async function adminClearGlobalMsg() {
   try {
-    const response = await fetch(`${API_URL}/admin/global-msg`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        admin_id: currentUser.user_id
-      })
-    });
-    const data = await response.json();
-    if (data.success) {
-      notify('✅ Сообщение убрано');
-      document.getElementById('adminGlobalMsg').classList.remove('show');
-    } else {
-      notify('❌ ' + data.error, 'error');
-    }
+    await supabase
+      .from('global_messages')
+      .delete()
+      .neq('id', '');
+    
+    notify('✅ Сообщение убрано');
+    document.getElementById('adminGlobalMsg').classList.remove('show');
+    
   } catch (e) {
-    notify('❌ Ошибка сервера', 'error');
+    notify('❌ Ошибка: ' + e.message, 'error');
   }
 }
 
 async function checkGlobalMessage() {
   try {
-    const response = await fetch(`${API_URL}/global-msg`);
-    const data = await response.json();
-    if (data.message) {
+    const { data, error } = await supabase
+      .from('global_messages')
+      .select('message')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    
+    if (error) throw error;
+    
+    if (data && data.length > 0 && data[0].message) {
       const el = document.getElementById('adminGlobalMsg');
-      el.innerText = '📢 ' + data.message;
+      el.innerText = '📢 ' + data[0].message;
       el.classList.add('show');
     } else {
       document.getElementById('adminGlobalMsg').classList.remove('show');
@@ -2081,7 +2324,7 @@ async function checkGlobalMessage() {
 }
 
 // ================================================================
-// 18. ЗАПУСК
+// 17. ЗАПУСК
 // ================================================================
 document.getElementById('mainNav').style.display = 'none';
 document.getElementById('authScreen').classList.add('active');
@@ -2090,12 +2333,10 @@ renderShop();
 update();
 updateAchievements();
 
-setTimeout(autoLogin, 300);
+setTimeout(autoLogin, 500);
 
-console.log('🔥 Super Clicker Online загружен!');
-console.log('📍 API_URL:', API_URL);
-console.log('📦 Улучшений:', upgrades.length);
-console.log('🏅 Достижений:', achData.length);
+console.log('🔥 Super Clicker Online с Supabase загружен!');
+console.log('📡 Supabase URL:', SUPABASE_URL);
 </script>
 </body>
-</html>
+  </html>
