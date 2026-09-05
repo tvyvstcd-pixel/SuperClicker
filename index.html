@@ -660,14 +660,14 @@ nav button#logoutBtn:hover {
         <input type="checkbox" id="rememberMe" checked>
         <label for="rememberMe">Запомнить меня</label>
       </div>
-      <button onclick="loginUser()" class="auth-btn" style="background:#3b82f6;color:white;">Войти</button>
-      <p style="margin-top:10px;font-size:14px;">Нет аккаунта? <span onclick="showRegister()" class="auth-link">Зарегистрироваться</span></p>
+      <button id="loginBtn" class="auth-btn" style="background:#3b82f6;color:white;">Войти</button>
+      <p style="margin-top:10px;font-size:14px;">Нет аккаунта? <span id="toRegister" class="auth-link">Зарегистрироваться</span></p>
     </div>
     <div id="registerForm" style="display:none;">
       <input id="regUsername" class="auth-input" placeholder="👤 Логин (мин 3)">
       <input id="regPassword" class="auth-input" type="password" placeholder="🔑 Пароль (мин 4)">
-      <button onclick="registerUser()" class="auth-btn" style="background:#22c55e;color:white;">Зарегистрироваться</button>
-      <p style="margin-top:10px;font-size:14px;">Уже есть аккаунт? <span onclick="showLogin()" class="auth-link">Войти</span></p>
+      <button id="registerBtn" class="auth-btn" style="background:#22c55e;color:white;">Зарегистрироваться</button>
+      <p style="margin-top:10px;font-size:14px;">Уже есть аккаунт? <span id="toLogin" class="auth-link">Войти</span></p>
     </div>
     <p id="authStatus" style="color:#fbbf24;margin-top:10px;min-height:20px;font-size:14px;"></p>
   </div>
@@ -827,47 +827,17 @@ nav button#logoutBtn:hover {
 </div>
 
 <script>
-// ================================================================
-// 0. ДИАГНОСТИКА (ВРЕМЕННО)
-// ================================================================
-console.log('🔍 1. Начало загрузки');
-
-// Проверяем, загрузился ли Supabase
-console.log('🔍 2. supabaseJs:', typeof supabaseJs);
-console.log('🔍 3. createClient:', typeof createClient);
-
-// Инициализация с диагностикой
-let supabase;
-
-try {
-    if (typeof supabaseJs !== 'undefined' && supabaseJs.createClient) {
-        supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log('✅ Способ 1: supabaseJs.createClient');
-    } else if (typeof createClient === 'function') {
-        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log('✅ Способ 2: createClient');
-    } else {
-        console.error('❌ Supabase НЕ ДОСТУПЕН!');
-        alert('❌ Ошибка: Supabase не загрузился!\nПроверь интернет и перезагрузи страницу.');
-    }
-} catch (e) {
-    console.error('❌ Ошибка инициализации:', e.message);
-    alert('❌ Ошибка: ' + e.message);
-}
-
-// Проверяем
-if (supabase) {
-    console.log('✅ supabase готов:', supabase.auth ? 'есть auth' : 'нет auth');
-} else {
-    console.error('❌ supabase = null!');
-}
+console.log('🔍 Начало загрузки скрипта');
 
 // ================================================================
-// 1. КОНСТАНТЫ И ПЕРЕМЕННЫЕ
+// КОНСТАНТЫ
 // ================================================================
 const SUPABASE_URL = 'https://bwmepmfuabysihljmxhw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3bWVwbWZ1YWJ5c2lobGpteGh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTcwNDQsImV4cCI6MjEwNDE3MzA0NH0.yR6HzcKOWKJ-HYQHvLqPMH6RK3J_dWnRR_hI4m3zUSI';
 
+// ================================================================
+// ПЕРЕМЕННЫЕ ИГРЫ
+// ================================================================
 let score = 0;
 let power = 1;
 let auto = 0;
@@ -880,6 +850,7 @@ let achievements = [];
 let currentUser = null;
 let upgrades = [];
 
+// Генерация улучшений
 for (let i = 1; i <= 150; i++) {
   let cost = 10;
   if (i > 1 && i <= 10) {
@@ -929,7 +900,7 @@ for (let i = 1; i <= 150; i++) {
 }
 
 // ================================================================
-// 2. ОСНОВНЫЕ ФУНКЦИИ
+// ФУНКЦИИ
 // ================================================================
 
 function clicker() {
@@ -939,7 +910,7 @@ function clicker() {
   addXP(power);
   checkAchievements();
   update();
-  console.log('Клик! Очки:', score);
+  console.log('✅ Клик! Очки:', score);
 }
 
 function addXP(amount) {
@@ -990,19 +961,12 @@ function showLogin() {
 }
 
 function loginUser() {
-  console.log('🔍 Кнопка Войти нажата');
-  
-  if (!supabase) {
-    document.getElementById('authStatus').innerText = '❌ Ошибка: Supabase не инициализирован!';
-    document.getElementById('authStatus').style.color = '#f87171';
-    console.error('❌ supabase = null');
-    return;
-  }
-  
-  console.log('✅ supabase существует');
+  console.log('🔍 loginUser вызвана');
   
   let username = document.getElementById('loginUsername').value.trim();
   let password = document.getElementById('loginPassword').value.trim();
+  
+  console.log('Username:', username, 'Password length:', password.length);
   
   if (!username || !password) {
     document.getElementById('authStatus').textContent = '❌ Заполните все поля!';
@@ -1021,15 +985,15 @@ function loginUser() {
   }
   
   currentUser = username;
-  document.getElementById('authStatus').textContent = '✅ Добро пожаловать!';
+  document.getElementById('authStatus').textContent = '✅ Добро пожаловать, ' + username + '!';
   document.getElementById('mainNav').style.display = 'flex';
-  setTimeout(() => show('game'), 300);
+  setTimeout(() => show('game'), 500);
   update();
   console.log('✅ Вход выполнен для:', username);
 }
 
 function registerUser() {
-  console.log('🔍 Кнопка Регистрация нажата');
+  console.log('🔍 registerUser вызвана');
   
   let username = document.getElementById('regUsername').value.trim();
   let password = document.getElementById('regPassword').value.trim();
@@ -1052,7 +1016,7 @@ function registerUser() {
   currentUser = username;
   document.getElementById('authStatus').textContent = '✅ Аккаунт создан!';
   document.getElementById('mainNav').style.display = 'flex';
-  setTimeout(() => show('game'), 300);
+  setTimeout(() => show('game'), 500);
   update();
   console.log('✅ Регистрация выполнена для:', username);
 }
@@ -1133,9 +1097,24 @@ function adminClearGlobalMsg() {
   alert('Функция недоступна');
 }
 
+// ================================================================
+// ИНИЦИАЛИЗАЦИЯ
+// ================================================================
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🔍 4. Скрипт загружен');
+  console.log('🔍 DOMContentLoaded вызван');
+  
+  // Привязываем события к кнопкам
+  document.getElementById('loginBtn').addEventListener('click', loginUser);
+  console.log('✅ loginBtn обработчик установлен');
+  
+  document.getElementById('registerBtn').addEventListener('click', registerUser);
+  console.log('✅ registerBtn обработчик установлен');
+  
+  document.getElementById('toRegister').addEventListener('click', showRegister);
+  document.getElementById('toLogin').addEventListener('click', showLogin);
+  
   update();
+  console.log('✅ Инициализация завершена');
 });
 </script>
 
