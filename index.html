@@ -869,7 +869,7 @@ nav button#logoutBtn:hover {
 const SUPABASE_URL = 'https://bwmepmfuabysihljmxhw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3bWVwbWZ1YWJ5c2lobGpteGh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTcwNDQsImV4cCI6MjEwNDE3MzA0NH0.yR6Ioa5c0Lk2yY9vCK7waIizihFUtTh8U-Q88P-AF7k';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ================================================================
 // 2. ИГРОВЫЕ ПЕРЕМЕННЫЕ
